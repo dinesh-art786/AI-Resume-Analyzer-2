@@ -102,6 +102,13 @@ def find_skills(text: str):
         if re.search(pattern, text):
             found.append(skill)
 
+    # Avoid counting NLP separately when its full form exists.
+    if (
+        "natural language processing" in found
+        and "nlp" in found
+    ):
+        found.remove("nlp")
+
     return found
 
 
@@ -177,7 +184,7 @@ def check_achievements(resume_text: str):
     patterns = [
         r"\b\d+(?:\.\d+)?%",
         r"\b\d+\+",
-        r"\b\d+\s+(?:users|customers|clients|projects|employees)\b",
+        r"\b\d+\s+(?:users|customers|clients|projects|employees|records|sales)\b",
         r"\b(increased|decreased|reduced|improved|saved|generated)\b"
     ]
 
@@ -314,10 +321,6 @@ def analyze_strengths_weaknesses(
 
     sections = section_analysis["section_details"]
 
-    # --------------------------------------
-    # CHECK EDUCATION
-    # --------------------------------------
-
     if sections.get("Education"):
 
         strengths.append(
@@ -338,10 +341,6 @@ def analyze_strengths_weaknesses(
                 "graduation year and relevant qualifications."
             )
         })
-
-    # --------------------------------------
-    # CHECK EXPERIENCE
-    # --------------------------------------
 
     if sections.get("Experience"):
 
@@ -364,10 +363,6 @@ def analyze_strengths_weaknesses(
             )
         })
 
-    # --------------------------------------
-    # CHECK SKILLS SECTION
-    # --------------------------------------
-
     if sections.get("Skills"):
 
         strengths.append(
@@ -388,10 +383,6 @@ def analyze_strengths_weaknesses(
                 "your relevant technical and professional skills."
             )
         })
-
-    # --------------------------------------
-    # CHECK PROJECTS
-    # --------------------------------------
 
     if sections.get("Projects"):
 
@@ -414,10 +405,6 @@ def analyze_strengths_weaknesses(
             )
         })
 
-    # --------------------------------------
-    # CHECK SKILLS
-    # --------------------------------------
-
     if resume_skills:
 
         strengths.append(
@@ -438,10 +425,6 @@ def analyze_strengths_weaknesses(
                 "that you genuinely possess."
             )
         })
-
-    # --------------------------------------
-    # CHECK JOB SKILL MATCH
-    # --------------------------------------
 
     if matched_skills:
 
@@ -467,10 +450,6 @@ def analyze_strengths_weaknesses(
             )
         })
 
-    # --------------------------------------
-    # CHECK ACTION VERBS
-    # --------------------------------------
-
     if action_verbs:
 
         strengths.append(
@@ -493,10 +472,6 @@ def analyze_strengths_weaknesses(
             )
         })
 
-    # --------------------------------------
-    # CHECK ACHIEVEMENTS
-    # --------------------------------------
-
     if has_achievements:
 
         strengths.append(
@@ -517,10 +492,6 @@ def analyze_strengths_weaknesses(
                 "project results, users supported or time saved."
             )
         })
-
-    # --------------------------------------
-    # CHECK CONTACT INFORMATION
-    # --------------------------------------
 
     quality_checks = resume_quality.get("checks", {})
 
@@ -547,10 +518,6 @@ def analyze_strengths_weaknesses(
                 "a valid phone number."
             )
         })
-
-    # --------------------------------------
-    # FALLBACK MESSAGES
-    # --------------------------------------
 
     if not strengths:
 
@@ -654,18 +621,14 @@ def analyze_resume(resume_text: str, job_description: str):
     if len(job_description) < 10:
         raise ValueError("Please provide a valid job description.")
 
-    # --------------------------------------
     # TEXT SIMILARITY
-    # --------------------------------------
 
     similarity = calculate_similarity(
         resume_text,
         job_description
     )
 
-    # --------------------------------------
     # SKILL MATCHING
-    # --------------------------------------
 
     resume_skills = find_skills(resume_text)
 
@@ -688,9 +651,7 @@ def analyze_resume(resume_text: str, job_description: str):
         if job_skills else 0.0
     )
 
-    # --------------------------------------
     # ATS SCORE
-    # --------------------------------------
 
     if job_skills:
 
@@ -705,33 +666,25 @@ def analyze_resume(resume_text: str, job_description: str):
 
     score = round(max(0, min(100, score)), 1)
 
-    # --------------------------------------
     # RESUME SECTION CHECK
-    # --------------------------------------
 
     section_analysis = check_resume_sections(
         resume_text
     )
 
-    # --------------------------------------
     # ACTION VERB CHECK
-    # --------------------------------------
 
     action_verbs = check_action_verbs(
         resume_text
     )
 
-    # --------------------------------------
     # ACHIEVEMENT CHECK
-    # --------------------------------------
 
     has_achievements = check_achievements(
         resume_text
     )
 
-    # --------------------------------------
-    # RESUME QUALITY ANALYSIS
-    # --------------------------------------
+    # RESUME QUALITY
 
     resume_quality = analyze_resume_quality(
         resume_text,
@@ -740,9 +693,7 @@ def analyze_resume(resume_text: str, job_description: str):
         has_achievements
     )
 
-    # --------------------------------------
     # STRENGTHS AND WEAKNESSES
-    # --------------------------------------
 
     strengths_weaknesses = analyze_strengths_weaknesses(
         resume_skills,
@@ -754,15 +705,11 @@ def analyze_resume(resume_text: str, job_description: str):
         resume_quality
     )
 
-    # --------------------------------------
     # JOB READINESS
-    # --------------------------------------
 
     readiness = get_job_readiness(score)
 
-    # --------------------------------------
     # IMPROVEMENT SUGGESTIONS
-    # --------------------------------------
 
     suggestions = []
 
@@ -827,42 +774,21 @@ def analyze_resume(resume_text: str, job_description: str):
         "readable resume layout."
     )
 
-    # --------------------------------------
     # FINAL RESPONSE
-    # --------------------------------------
 
     return {
-
         "match_score": score,
-
-        "text_similarity": round(
-            similarity * 100, 1
-        ),
-
-        "skill_coverage": round(
-            coverage * 100, 1
-        ),
-
+        "text_similarity": round(similarity * 100, 1),
+        "skill_coverage": round(coverage * 100, 1),
         "resume_skills": resume_skills,
-
         "job_skills": job_skills,
-
         "matched_skills": matched,
-
         "missing_skills": missing,
-
         "suggestions": suggestions,
-
         "job_readiness": readiness,
-
         "resume_sections": section_analysis,
-
         "action_verbs": action_verbs,
-
         "has_measurable_achievements": has_achievements,
-
         "resume_quality": resume_quality,
-
         "strengths_weaknesses": strengths_weaknesses
-
     }

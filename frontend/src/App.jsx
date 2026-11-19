@@ -1,4 +1,7 @@
-
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
+import { API_URL } from "./config";
 import React, { useState, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
@@ -8,14 +11,6 @@ import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import CinematicExperience from "./components/CinematicExperience";
 
-import Login from "./pages/Login.jsx";
-import Register from "./pages/Register.jsx";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
-import ChangePassword from "./pages/ChangePassword.jsx";
-import AccountSettings from "./pages/AccountSettings.jsx";
-
-import { useAuth } from "./context/AuthContext.jsx";
 
 import "./App.css";
 
@@ -205,7 +200,7 @@ function App() {
 
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/api/analyze",
+    `${API_URL}/analyze`,
                 {
                     method: "POST",
                     headers: {

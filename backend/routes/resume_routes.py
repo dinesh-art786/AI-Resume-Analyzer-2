@@ -178,8 +178,6 @@ async def analyze(
         print("Filename:", filename)
         print("Extension:", extension)
         print("Extracted text length:", len(resume_text))
-        print("Extracted resume text:")
-        print(resume_text)
         print("=============================================\n")
 
     except Exception:
@@ -207,13 +205,10 @@ async def analyze(
         print("ATS Score:", result.get("match_score"))
         print("Text Similarity:", result.get("text_similarity"))
         print("Skill Coverage:", result.get("skill_coverage"))
-        print("Resume Skills:", result.get("resume_skills"))
-        print("Job Skills:", result.get("job_skills"))
         print("Matched Skills:", result.get("matched_skills"))
         print("Missing Skills:", result.get("missing_skills"))
         print("====================================\n")
 
-        # DEBUG INFORMATION SENT TO FRONTEND
         result["debug_info"] = {
             "ats_score": result.get("match_score"),
             "text_similarity": result.get("text_similarity"),

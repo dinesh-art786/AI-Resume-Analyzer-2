@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import "./ChangePassword.css";
+import { API_URL } from "../config";
 
 function ChangePassword({ token, onBack, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -53,7 +54,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/change-password",
+        `${API_URL}/auth/change-password`,
         {
           method: "POST",
           headers: {
@@ -78,7 +79,6 @@ function ChangePassword({ token, onBack, onSuccess }) {
       setNewPassword("");
       setConfirmPassword("");
 
-      // Keep the success screen visible until the user continues.
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {

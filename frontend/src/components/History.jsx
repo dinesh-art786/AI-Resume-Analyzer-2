@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
+import { API_URL } from "../config";
 
 function History() {
   const { token } = useAuth();
@@ -12,18 +13,12 @@ function History() {
   const [deletingId, setDeletingId] = useState(null);
   const [clearing, setClearing] = useState(false);
 
-  // ======================================
   // AUTHENTICATION HEADERS
-  // ======================================
-
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${token}`
   });
 
-  // ======================================
   // FETCH RESUME HISTORY
-  // ======================================
-
   const fetchHistory = useCallback(async () => {
     if (!token) {
       setLoading(false);
@@ -35,12 +30,9 @@ function History() {
     setError("");
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/history",
-        {
-          headers: getAuthHeaders()
-        }
-      );
+      const response = await fetch(`${API_URL}/history`, {
+        headers: getAuthHeaders()
+      });
 
       if (response.status === 401) {
         throw new Error("Your session has expired. Please log in again.");
@@ -62,10 +54,7 @@ function History() {
     }
   }, [token]);
 
-  // ======================================
   // LOAD HISTORY AND AUTO REFRESH
-  // ======================================
-
   useEffect(() => {
     fetchHistory();
 
@@ -76,10 +65,7 @@ function History() {
     };
   }, [fetchHistory]);
 
-  // ======================================
   // DELETE SINGLE RESUME HISTORY
-  // ======================================
-
   async function deleteHistory(id) {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this resume analysis?"
@@ -91,13 +77,10 @@ function History() {
     setError("");
 
     try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/history/${id}`,
-        {
-          method: "DELETE",
-          headers: getAuthHeaders()
-        }
-      );
+      const response = await fetch(`${API_URL}/history/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      });
 
       const data = await response.json();
 
@@ -127,10 +110,7 @@ function History() {
     }
   }
 
-  // ======================================
   // CLEAR ALL RESUME HISTORY
-  // ======================================
-
   async function clearAllHistory() {
     if (history.length === 0) {
       alert("No resume history available to delete.");
@@ -147,13 +127,10 @@ function History() {
     setError("");
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/history",
-        {
-          method: "DELETE",
-          headers: getAuthHeaders()
-        }
-      );
+      const response = await fetch(`${API_URL}/history`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      });
 
       const data = await response.json();
 
@@ -178,30 +155,19 @@ function History() {
     }
   }
 
-  // ======================================
   // VIEW / HIDE DETAILS
-  // ======================================
-
   function toggleDetails(id) {
-    setSelectedId(
-      selectedId === id ? null : id
-    );
+    setSelectedId(selectedId === id ? null : id);
   }
 
-  // ======================================
   // FORMAT DATE
-  // ======================================
-
   function formatDate(date) {
     if (!date) return "Date unavailable";
 
     return new Date(date).toLocaleString();
   }
 
-  // ======================================
   // UI
-  // ======================================
-
   return (
     <section className="history-section" id="history">
 
@@ -256,28 +222,20 @@ function History() {
 
               <h3>{item.filename}</h3>
 
-              <p>
-                Analysis ID: {item.id}
-              </p>
+              <p>Analysis ID: {item.id}</p>
 
-              <p>
-                Date: {formatDate(item.created_at)}
-              </p>
+              <p>Date: {formatDate(item.created_at)}</p>
 
             </div>
 
             <div className="history-score">
-              <strong>
-                {item.match_score}%
-              </strong>
+              <strong>{item.match_score}%</strong>
               <span>ATS Match</span>
             </div>
 
             <div className="history-actions">
 
-              <button
-                onClick={() => toggleDetails(item.id)}
-              >
+              <button onClick={() => toggleDetails(item.id)}>
                 {selectedId === item.id
                   ? "Hide Details"
                   : "View Details"}
@@ -288,9 +246,7 @@ function History() {
                 onClick={() => deleteHistory(item.id)}
                 disabled={deletingId === item.id || clearing}
               >
-                {deletingId === item.id
-                  ? "Deleting..."
-                  : "Delete"}
+                {deletingId === item.id ? "Deleting..." : "Delete"}
               </button>
 
             </div>

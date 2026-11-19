@@ -1,4 +1,4 @@
-
+import { API_URL, BACKEND_BASE_URL } from "../config";
 import React, { useEffect, useState, useCallback } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -99,11 +99,11 @@ function Dashboard() {
       const headers = getAuthHeaders();
 
       const [historyResponse, analyticsResponse] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/history${query}`, {
+        fetch(`${API_URL}/history${query}`, {
           headers
         }),
 
-        fetch(`http://127.0.0.1:8000/api/analytics${query}`, {
+        fetch(`${API_URL}/analytics${query}`, {
           headers
         })
       ]);
@@ -176,7 +176,7 @@ function Dashboard() {
     }
 
     const response = await fetch(
-      `http://127.0.0.1:8000/api/export${getExportQuery()}`,
+      `${API_URL}/export${getExportQuery()}`,
       {
         headers: getAuthHeaders()
       }
@@ -596,7 +596,7 @@ function Dashboard() {
       >
         {user?.profile_picture ? (
           <img
-            src={`http://127.0.0.1:8000${user.profile_picture}`}
+            src={`${BACKEND_BASE_URL}${user.profile_picture}`}
             alt="Profile"
             style={{
               width: "65px",

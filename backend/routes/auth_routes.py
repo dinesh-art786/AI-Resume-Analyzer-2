@@ -7,6 +7,7 @@ import hashlib
 import smtplib
 import logging
 import time
+import sqlite3
 
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
@@ -73,7 +74,7 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
 FRONTEND_URL = os.getenv(
     "FRONTEND_URL",
-    "http://localhost:5174"
+    "http://localhost:5173"
 ).rstrip("/")
 
 
@@ -235,6 +236,23 @@ AI Resume Analyzer Team
         server.send_message(message)
 
 
+def delete_old_profile_picture(old_picture: str):
+    """Safely delete an old profile picture."""
+
+    if not old_picture:
+        return
+
+    try:
+        old_filename = Path(old_picture).name
+        old_path = PROFILE_UPLOAD_DIR / old_filename
+
+        if old_path.exists() and old_path.is_file():
+            old_path.unlink()
+
+    except OSError:
+        logger.exception("Could not delete old profile picture")
+
+
 # ==========================================
 # REGISTER
 # ==========================================
@@ -285,6 +303,13 @@ def register(data: RegisterRequest):
 
             user_id = cursor.lastrowid
 
+    except sqlite3.IntegrityError:
+
+        raise HTTPException(
+            409,
+            "Email already registered."
+        )
+
     except Exception:
 
         logger.exception("Registration failed")
@@ -320,15 +345,11 @@ def login(data: LoginRequest):
 
     email = data.email.strip().lower()
 
-    # STEP 1: DATABASE LOOKUP
-
     db_start = time.perf_counter()
 
     user = get_user_by_email(email)
 
     db_time = time.perf_counter() - db_start
-
-    # STEP 2: PASSWORD VERIFICATION
 
     verify_start = time.perf_counter()
 
@@ -353,15 +374,11 @@ def login(data: LoginRequest):
             detail="Invalid email or password."
         )
 
-    # STEP 3: JWT TOKEN GENERATION
-
     token_start = time.perf_counter()
 
     token = create_access_token(user["id"])
 
     token_time = time.perf_counter() - token_start
-
-    # STEP 4: TOTAL TIME
 
     total_time = time.perf_counter() - total_start
 
@@ -536,92 +553,94 @@ async def upload_profile_picture(
     current_user: dict = Depends(get_current_user)
 ):
 
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-
-        raise HTTPException(
-            status_code=400,
-            detail="Only JPG, JPEG and PNG images are allowed."
-        )
-
-    image_data = await file.read(
-        MAX_PROFILE_IMAGE_SIZE + 1
-    )
-
-    if not image_data:
-
-        raise HTTPException(
-            status_code=400,
-            detail="Please select an image."
-        )
-
-    if len(image_data) > MAX_PROFILE_IMAGE_SIZE:
-
-        raise HTTPException(
-            status_code=400,
-            detail="Image size must not exceed 5 MB."
-        )
-
-    is_jpeg = image_data.startswith(b"\xff\xd8\xff")
-    is_png = image_data.startswith(b"\x89PNG\r\n\x1a\n")
-
-    extension = ALLOWED_IMAGE_TYPES[file.content_type]
-
-    if not (
-        (extension == ".jpg" and is_jpeg)
-        or (extension == ".png" and is_png)
-    ):
-
-        raise HTTPException(
-            status_code=400,
-            detail="The uploaded file is not a valid JPG or PNG image."
-        )
-
-    user_id = current_user["id"]
-
-    filename = f"user_{user_id}_{secrets.token_hex(8)}{extension}"
-
-    file_path = PROFILE_UPLOAD_DIR / filename
-
-    old_picture = current_user.get("profile_picture")
-
     try:
+
+        if file.content_type not in ALLOWED_IMAGE_TYPES:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Only JPG, JPEG and PNG images are allowed."
+            )
+
+        image_data = await file.read(
+            MAX_PROFILE_IMAGE_SIZE + 1
+        )
+
+        if not image_data:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Please select an image."
+            )
+
+        if len(image_data) > MAX_PROFILE_IMAGE_SIZE:
+
+            raise HTTPException(
+                status_code=400,
+                detail="Image size must not exceed 5 MB."
+            )
+
+        is_jpeg = image_data.startswith(b"\xff\xd8\xff")
+        is_png = image_data.startswith(b"\x89PNG\r\n\x1a\n")
+
+        extension = ALLOWED_IMAGE_TYPES[file.content_type]
+
+        if not (
+            (extension == ".jpg" and is_jpeg)
+            or (extension == ".png" and is_png)
+        ):
+
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded file is not a valid JPG or PNG image."
+            )
+
+        user_id = current_user["id"]
+
+        filename = (
+            f"user_{user_id}_{secrets.token_hex(8)}{extension}"
+        )
+
+        file_path = PROFILE_UPLOAD_DIR / filename
+
+        old_picture = current_user.get("profile_picture")
+
+        relative_path = f"/uploads/profiles/{filename}"
 
         with open(file_path, "wb") as image_file:
             image_file.write(image_data)
 
-        relative_path = f"/uploads/profiles/{filename}"
+        try:
 
-        with get_connection() as connection:
+            with get_connection() as connection:
 
-            connection.execute(
-                """
-                UPDATE users
-                SET profile_picture = ?
-                WHERE id = ?
-                """,
-                (
-                    relative_path,
-                    user_id
+                connection.execute(
+                    """
+                    UPDATE users
+                    SET profile_picture = ?
+                    WHERE id = ?
+                    """,
+                    (relative_path, user_id)
                 )
-            )
 
-        if old_picture:
+        except Exception:
 
-            old_filename = Path(old_picture).name
-            old_path = PROFILE_UPLOAD_DIR / old_filename
+            if file_path.exists():
+                file_path.unlink()
 
-            if old_path.exists() and old_path.is_file():
-                old_path.unlink()
+            raise
+
+        delete_old_profile_picture(old_picture)
 
         return {
             "message": "Profile picture uploaded successfully.",
             "profile_picture": relative_path
         }
 
-    except Exception:
+    except HTTPException:
+        raise
 
-        if file_path.exists():
-            file_path.unlink()
+    except Exception:
 
         logger.exception("Profile picture upload failed")
 
@@ -663,11 +682,7 @@ def delete_profile_picture(
             (current_user["id"],)
         )
 
-    old_filename = Path(old_picture).name
-    old_path = PROFILE_UPLOAD_DIR / old_filename
-
-    if old_path.exists() and old_path.is_file():
-        old_path.unlink()
+    delete_old_profile_picture(old_picture)
 
     return {
         "message": "Profile picture deleted successfully."

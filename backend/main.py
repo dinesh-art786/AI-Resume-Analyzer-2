@@ -1,4 +1,5 @@
 
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -43,15 +44,28 @@ app.mount(
 
 
 # CONFIGURE CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+frontend_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5177",
     "http://127.0.0.1:5177",
-    "https://ai-resume-analyzer-2007-p4yzjgjqk-bdineshsravya786-4602.vercel.app"
-],
+]
+
+# Add deployed frontend URL from environment
+vercel_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+
+if vercel_url:
+    frontend_origins.append(vercel_url)
+
+# Keep the existing deployed URL as a fallback
+if not vercel_url:
+    frontend_origins.append(
+        "https://ai-resume-analyzer-2007-p4yzjgjqk-bdineshsravya786-4602.vercel.app"
+    )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=frontend_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

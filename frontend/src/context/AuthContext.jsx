@@ -6,9 +6,9 @@ import React, {
     useState
 } from "react";
 
-const AuthContext = createContext(null);
+import { API_URL } from "../config";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
@@ -19,8 +19,6 @@ export function AuthProvider({ children }) {
 
     const [loading, setLoading] = useState(true);
 
-    // Verify an existing session only when the app first opens.
-    // Do not verify again when login/signup sets a new token.
     useEffect(() => {
         let active = true;
 
@@ -72,14 +70,16 @@ export function AuthProvider({ children }) {
 
     const authenticate = async (endpoint, formData) => {
         try {
-            console.log("Sending request to:", `${API_URL}/auth/${endpoint}`);
-            const response = await fetch(`${API_URL}/auth/${endpoint}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
+            const response = await fetch(
+                `${API_URL}/auth/${endpoint}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                }
+            );
 
             const data = await response.json();
 
@@ -101,7 +101,7 @@ export function AuthProvider({ children }) {
 
             if (error instanceof TypeError) {
                 throw new Error(
-                    "Cannot connect to the backend. Make sure FastAPI is running."
+                    "Cannot connect to the backend. Please check your API URL."
                 );
             }
 

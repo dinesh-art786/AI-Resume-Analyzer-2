@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { API_URL } from "../config";
 
 function ForgotPassword({ onBack }) {
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ function ForgotPassword({ onBack }) {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/forgot-password",
+        `${API_URL}/auth/forgot-password`,
         {
           method: "POST",
           headers: {
@@ -32,7 +33,11 @@ function ForgotPassword({ onBack }) {
         throw new Error(data.detail || "Something went wrong.");
       }
 
-      setMessage(data.message || "If your account exists, a reset link has been sent.");
+      setMessage(
+        data.message ||
+        "If your account exists, a reset link has been sent."
+      );
+
     } catch (err) {
       setError(
         err instanceof TypeError

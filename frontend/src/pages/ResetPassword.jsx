@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { API_URL } from "../config";
 
 function ResetPassword({ onBack }) {
   const [password, setPassword] = useState("");
@@ -37,7 +38,7 @@ function ResetPassword({ onBack }) {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/reset-password",
+        `${API_URL}/auth/reset-password`,
         {
           method: "POST",
           headers: {

@@ -1,7 +1,7 @@
-
+import { BACKEND_BASE_URL } from "../config";
 import React, { useState } from "react";
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+
 
 function Navbar({
     user,
@@ -15,9 +15,9 @@ function Navbar({
     const userName = user?.name || user?.username || "User";
     const userEmail = user?.email || "";
 
-    const profilePicture = user?.profile_picture
-        ? `${BACKEND_URL}${user.profile_picture}`
-        : null;
+   const profilePicture = user?.profile_picture
+    ? `${BACKEND_BASE_URL}${user.profile_picture}`
+    : null;
 
     function handleNavigation(event, page) {
         event.preventDefault();

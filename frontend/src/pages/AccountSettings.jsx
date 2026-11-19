@@ -1,9 +1,7 @@
 
 import React, { useState, useRef } from "react";
 import "./AccountSettings.css";
-
-const API_URL = "http://127.0.0.1:8000/api";
-const BACKEND_URL = "http://127.0.0.1:8000";
+import { API_URL, BACKEND_BASE_URL } from "../config";
 
 function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
@@ -12,7 +10,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
     const [profilePicture, setProfilePicture] = useState(
         user?.profile_picture
-            ? `${BACKEND_URL}${user.profile_picture}`
+            ? `${BACKEND_BASE_URL}${user.profile_picture}`
             : ""
     );
 
@@ -27,9 +25,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
     const fileInputRef = useRef(null);
 
-
     // UPDATE PROFILE DETAILS
-
     const handleSubmit = async (e) => {
 
         e.preventDefault();
@@ -87,9 +83,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
         }
     };
 
-
     // SELECT PROFILE PICTURE
-
     const handleFileChange = (e) => {
 
         setError("");
@@ -123,9 +117,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
         );
     };
 
-
     // UPLOAD PROFILE PICTURE
-
     const handlePictureUpload = async () => {
 
         if (!selectedFile) {
@@ -164,7 +156,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
             }
 
             const updatedPicture =
-                `${BACKEND_URL}${data.profile_picture}`;
+                `${BACKEND_BASE_URL}${data.profile_picture}`;
 
             setProfilePicture(updatedPicture);
             setSelectedFile(null);
@@ -189,9 +181,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
         }
     };
 
-
     // DELETE PROFILE PICTURE
-
     const handlePictureDelete = async () => {
 
         setError("");
@@ -242,7 +232,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
         }
     };
 
-
     return (
 
         <div className="account-page">
@@ -291,7 +280,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
                 </div>
 
-
                 {/* RIGHT PANEL */}
 
                 <div className="account-right">
@@ -303,7 +291,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                     >
                         ← Back to Dashboard
                     </button>
-
 
                     <div className="account-heading">
 
@@ -318,7 +305,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                         </p>
 
                     </div>
-
 
                     {/* PROFILE PICTURE */}
 
@@ -406,7 +392,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
                     </div>
 
-
                     {/* PROFILE FORM */}
 
                     <form onSubmit={handleSubmit}>
@@ -430,7 +415,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
                         </div>
 
-
                         <div className="account-field">
 
                             <label htmlFor="account-email">
@@ -448,20 +432,17 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
                         </div>
 
-
                         {error && (
                             <div className="account-error">
                                 {error}
                             </div>
                         )}
 
-
                         {success && (
                             <div className="account-success">
                                 ✓ {success}
                             </div>
                         )}
-
 
                         <button
                             type="submit"
@@ -474,7 +455,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                         </button>
 
                     </form>
-
 
                     <p className="account-note">
                         Your updated profile details will appear

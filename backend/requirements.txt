@@ -1,7 +1,10 @@
-
 fastapi
 uvicorn[standard]
 python-multipart
 scikit-learn
 pypdf
 python-docx
+PyJWT
+pwdlib[argon2]
+python-dotenv
+openpyxl

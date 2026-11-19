@@ -50,6 +50,7 @@ app.add_middleware(
     "http://127.0.0.1:5173",
     "http://localhost:5177",
     "http://127.0.0.1:5177",
+    "https://ai-resume-analyzer-2007-p4yzjgjqk-bdineshsravya786-4602.vercel.app"
 ],
     allow_credentials=True,
     allow_methods=["*"],

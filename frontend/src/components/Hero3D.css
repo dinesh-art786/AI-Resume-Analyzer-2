@@ -1,0 +1,217 @@
+
+.hero3d-container {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  height: 470px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1100px;
+  overflow: hidden;
+}
+
+.hero3d-glow {
+  position: absolute;
+  width: 310px;
+  height: 310px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f5b8b8 0%, #fce5e5 45%, transparent 72%);
+  filter: blur(12px);
+}
+
+.hero3d-orb {
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 25%,
+    #ffb0b0,
+    #d62839 40%,
+    #8f1022 75%,
+    #4c0711
+  );
+  box-shadow:
+    inset -22px -25px 45px rgba(60, 0, 10, 0.4),
+    inset 12px 12px 28px rgba(255, 255, 255, 0.3),
+    0 30px 70px rgba(150, 15, 35, 0.22);
+  opacity: 0.88;
+  animation: orbFloat 7s ease-in-out infinite;
+}
+
+.hero3d-document {
+  position: relative;
+  z-index: 2;
+  width: 255px;
+  min-height: 340px;
+  padding: 25px;
+  box-sizing: border-box;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #ffffff, #fff8f7);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 35px 65px rgba(80, 10, 20, 0.22),
+    0 10px 25px rgba(100, 10, 20, 0.12);
+  transition: transform 0.18s ease-out;
+  animation: documentFloat 6s ease-in-out infinite;
+}
+
+.resume-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.resume-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #c51e32, #f08080);
+}
+
+.resume-name {
+  width: 95px;
+  height: 9px;
+  border-radius: 10px;
+  background: #681522;
+  margin-bottom: 8px;
+}
+
+.resume-role {
+  width: 70px;
+  height: 6px;
+  border-radius: 10px;
+  background: #d9a3a8;
+}
+
+.resume-line {
+  height: 5px;
+  border-radius: 10px;
+  background: #eadcdd;
+  margin: 9px 0;
+}
+
+.resume-line.long {
+  width: 100%;
+}
+
+.resume-line.medium {
+  width: 75%;
+}
+
+.resume-line.short {
+  width: 50%;
+}
+
+.resume-heading {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: #941b2c;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.resume-skills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.resume-skills span {
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #fce9eb;
+  color: #a51c30;
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.resume-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 11px;
+  border-radius: 10px;
+  background: #fff0f1;
+}
+
+.score-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #a91d32;
+  color: white;
+}
+
+.resume-score strong {
+  display: block;
+  color: #9d172b;
+  font-size: 17px;
+}
+
+.resume-score small {
+  color: #9b777b;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+
+.hero3d-floating-dot {
+  position: absolute;
+  z-index: 3;
+  top: 17%;
+  right: 13%;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #ffc1c1, #b71931 70%);
+  box-shadow: 0 8px 20px rgba(150, 15, 35, 0.2);
+}
+
+.hero3d-shadow {
+  position: absolute;
+  bottom: 35px;
+  width: 230px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(100, 10, 25, 0.16);
+  filter: blur(17px);
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes documentFloat {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -9px; }
+}
+
+@media (max-width: 600px) {
+  .hero3d-container {
+    height: 390px;
+  }
+
+  .hero3d-orb {
+    width: 270px;
+    height: 270px;
+  }
+
+  .hero3d-document {
+    transform: scale(0.88);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero3d-orb,
+  .hero3d-document {
+    animation: none;
+  }
+}

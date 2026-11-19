@@ -1,0 +1,377 @@
+
+/* =========================================
+   LUXURY CINEMATIC EXPERIENCE
+========================================= */
+
+.cinematic-container {
+    position: relative;
+    width: 100%;
+    height: 300vh;
+    overflow: clip;
+    isolation: isolate;
+    background: #080508;
+    color: #f8f3f5;
+}
+
+/* =========================================
+   3D CANVAS
+========================================= */
+
+.cinematic-canvas {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    margin-bottom: -100vh;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 1;
+    visibility: visible;
+}
+
+.cinematic-canvas canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* =========================================
+   BACKGROUND
+========================================= */
+
+.cinematic-experience-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+        radial-gradient(
+            ellipse at 75% 48%,
+            rgba(119, 0, 35, 0.24),
+            transparent 43%
+        ),
+        radial-gradient(
+            ellipse at 10% 85%,
+            rgba(67, 0, 22, 0.22),
+            transparent 42%
+        ),
+        #080508;
+}
+
+.cinematic-red-glow {
+    position: absolute;
+    width: 550px;
+    height: 550px;
+    right: -180px;
+    top: 10%;
+    border-radius: 50%;
+    background: rgba(193, 10, 55, 0.12);
+    filter: blur(130px);
+}
+
+.cinematic-red-glow-two {
+    width: 420px;
+    height: 420px;
+    right: 35%;
+    top: 55%;
+    background: rgba(105, 0, 35, 0.16);
+}
+
+/* =========================================
+   SCROLL SECTIONS
+========================================= */
+
+.cinematic-section {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100vh;
+    min-height: 650px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 9%;
+    pointer-events: none;
+}
+
+.cinematic-content {
+    width: min(620px, 49%);
+    position: relative;
+    pointer-events: auto;
+    transform: translateY(0);
+    will-change: transform, opacity;
+}
+
+.cinematic-hidden {
+    opacity: 0;
+    transform: translateY(75px);
+}
+
+/* =========================================
+   LABEL
+========================================= */
+
+.cinematic-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #d7a5b4;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+}
+
+.cinematic-label span {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 27px;
+    height: 1px;
+    background: #e11d48;
+    box-shadow: 0 0 12px #e11d48;
+}
+
+/* =========================================
+   HEADINGS
+========================================= */
+
+.cinematic-content h1,
+.cinematic-content h2 {
+    margin: 0;
+    color: #fff8fa;
+    font-family: inherit;
+    font-size: clamp(52px, 6.5vw, 94px);
+    font-weight: 850;
+    letter-spacing: -4px;
+    line-height: 0.99;
+    text-transform: uppercase;
+    text-shadow: 0 8px 45px rgba(0, 0, 0, 0.5);
+}
+
+.cinematic-content h1 span,
+.cinematic-content h2 span {
+    color: transparent;
+    background: linear-gradient(
+        105deg,
+        #ff829b 0%,
+        #e11d48 40%,
+        #850b2d 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 24px rgba(225, 29, 72, 0.17));
+}
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.cinematic-description {
+    max-width: 440px;
+    margin-top: 26px;
+    color: #b9abb1;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.9;
+    letter-spacing: 0.2px;
+}
+
+/* =========================================
+   CTA BUTTON
+========================================= */
+
+.cinematic-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    min-height: 55px;
+    margin-top: 32px;
+    padding: 0 25px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    border: 1px solid rgba(255, 77, 111, 0.55);
+    border-radius: 4px;
+    background: linear-gradient(
+        110deg,
+        #8d092d,
+        #d41445
+    );
+    box-shadow:
+        0 10px 35px rgba(180, 0, 48, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        background 0.3s ease;
+}
+
+.cinematic-cta span {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.cinematic-cta:hover {
+    color: #fff;
+    transform: translateY(-4px);
+    background: linear-gradient(
+        110deg,
+        #b10c3a,
+        #f02353
+    );
+    box-shadow:
+        0 15px 45px rgba(225, 29, 72, 0.35),
+        0 0 25px rgba(225, 29, 72, 0.18);
+}
+
+.cinematic-cta:hover span {
+    transform: translate(4px, -4px);
+}
+
+/* =========================================
+   SCROLL INDICATOR
+========================================= */
+
+.scroll-indicator {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 65px;
+}
+
+.scroll-indicator span {
+    color: #897982;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+}
+
+.scroll-indicator div {
+    position: relative;
+    width: 55px;
+    height: 1px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.scroll-indicator div::after {
+    content: "";
+    position: absolute;
+    width: 25px;
+    height: 1px;
+    left: -25px;
+    background: #ff315d;
+    animation: cinematicScroll 1.8s infinite ease-in-out;
+}
+
+@keyframes cinematicScroll {
+    to {
+        left: 55px;
+    }
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+    .cinematic-section {
+        padding: 0 6%;
+    }
+
+    .cinematic-content {
+        width: 52%;
+    }
+
+    .cinematic-content h1,
+    .cinematic-content h2 {
+        font-size: clamp(46px, 7vw, 72px);
+        letter-spacing: -3px;
+    }
+
+    .cinematic-description {
+        font-size: 14px;
+    }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+    .cinematic-container {
+        height: 300vh;
+    }
+
+    .cinematic-section {
+        height: 100vh;
+        min-height: 600px;
+        padding: 0 7%;
+        align-items: center;
+    }
+
+    .cinematic-content {
+        width: 88%;
+    }
+
+    .cinematic-content h1,
+    .cinematic-content h2 {
+        font-size: clamp(40px, 11vw, 58px);
+        letter-spacing: -2px;
+    }
+
+    .cinematic-label {
+        font-size: 8px;
+        letter-spacing: 1.8px;
+        line-height: 1.7;
+    }
+
+    .cinematic-description {
+        max-width: 330px;
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    .scroll-indicator {
+        margin-top: 42px;
+    }
+
+    .cinematic-canvas {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .cinematic-red-glow {
+        width: 300px;
+        height: 300px;
+        filter: blur(90px);
+    }
+
+    .cinematic-cta {
+        min-height: 49px;
+        gap: 18px;
+        padding: 0 17px;
+        font-size: 9px;
+    }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-indicator div::after {
+        animation: none;
+    }
+
+    .cinematic-cta,
+    .cinematic-cta span {
+        transition: none;
+    }
+}

@@ -5,557 +5,318 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-# ==========================================
-# SKILLS DATABASE
-# ==========================================
+# --------------------------------------------------
+# 1. SKILL ALIASES
+# --------------------------------------------------
 
-SKILLS = [
-    "python", "java", "javascript", "typescript", "c++", "c#", "sql",
-    "html", "css", "react", "angular", "vue", "node.js", "fastapi",
-    "django", "flask", "machine learning", "deep learning",
-    "artificial intelligence", "data analysis", "data science",
-    "pandas", "numpy", "scikit-learn", "tensorflow", "pytorch",
-    "natural language processing", "nlp", "power bi", "tableau",
-    "excel", "statistics", "aws", "azure", "docker", "kubernetes",
-    "git", "linux", "rest api", "mongodb", "postgresql", "mysql",
-    "communication", "leadership", "problem solving",
-    "project management", "agile", "testing", "cybersecurity"
-]
-
-
-# ==========================================
-# RESUME SECTIONS
-# ==========================================
-
-RESUME_SECTIONS = {
-    "Summary": [
-        "summary", "professional summary", "career objective",
-        "profile", "about me"
-    ],
-    "Skills": [
-        "skills", "technical skills", "core competencies",
-        "technical expertise"
-    ],
-    "Experience": [
-        "experience", "work experience", "employment history",
-        "professional experience"
-    ],
-    "Education": [
-        "education", "academic background", "qualification"
-    ],
-    "Projects": [
-        "projects", "personal projects", "academic projects"
-    ],
-    "Certifications": [
-        "certifications", "certificates", "licenses"
-    ]
+SKILL_ALIASES = {
+    "python": ["python", "py"],
+    "java": ["java"],
+    "javascript": ["javascript", "js"],
+    "typescript": ["typescript", "ts"],
+    "c++": ["c++", "cpp"],
+    "c#": ["c#", "c sharp"],
+    "sql": ["sql"],
+    "html": ["html"],
+    "css": ["css"],
+    "react": ["react", "reactjs", "react.js"],
+    "angular": ["angular"],
+    "vue": ["vue", "vuejs", "vue.js"],
+    "node.js": ["node.js", "nodejs", "node js"],
+    "fastapi": ["fastapi"],
+    "django": ["django"],
+    "flask": ["flask"],
+    "machine learning": ["machine learning", "ml"],
+    "deep learning": ["deep learning"],
+    "artificial intelligence": ["artificial intelligence", "ai"],
+    "data analysis": ["data analysis"],
+    "data science": ["data science"],
+    "pandas": ["pandas"],
+    "numpy": ["numpy"],
+    "scikit-learn": ["scikit-learn", "sklearn"],
+    "tensorflow": ["tensorflow"],
+    "pytorch": ["pytorch"],
+    "nlp": ["nlp", "natural language processing"],
+    "power bi": ["power bi", "powerbi"],
+    "tableau": ["tableau"],
+    "excel": ["excel", "microsoft excel"],
+    "statistics": ["statistics", "statistical analysis"],
+    "aws": ["aws", "amazon web services"],
+    "azure": ["azure", "microsoft azure"],
+    "docker": ["docker"],
+    "kubernetes": ["kubernetes", "k8s"],
+    "git": ["git"],
+    "linux": ["linux"],
+    "rest api": ["rest api", "restful api", "rest apis"],
+    "mongodb": ["mongodb", "mongo db"],
+    "postgresql": ["postgresql", "postgres"],
+    "mysql": ["mysql"],
+    "communication": ["communication", "communication skills"],
+    "leadership": ["leadership"],
+    "problem solving": ["problem solving", "problem-solving"],
+    "project management": ["project management"],
+    "agile": ["agile"],
+    "testing": ["testing", "software testing"],
+    "cybersecurity": ["cybersecurity", "cyber security"],
 }
 
 
-# ==========================================
-# ACTION VERBS
-# ==========================================
+SKILLS = list(SKILL_ALIASES.keys())
 
-STRONG_ACTION_VERBS = [
-    "developed", "created", "designed", "implemented",
-    "managed", "led", "built", "improved", "achieved",
-    "optimized", "delivered", "analyzed", "automated",
-    "engineered", "launched", "increased", "reduced",
-    "organized", "coordinated", "executed", "established",
-    "transformed", "streamlined", "generated"
+
+# --------------------------------------------------
+# 2. RESUME SECTIONS
+# --------------------------------------------------
+
+RESUME_SECTIONS = [
+    "education",
+    "experience",
+    "work experience",
+    "skills",
+    "technical skills",
+    "projects",
+    "certifications",
+    "achievements",
+    "summary",
+    "objective",
 ]
 
 
-# ==========================================
-# TEXT CLEANING
-# ==========================================
+# --------------------------------------------------
+# 3. ACTION VERBS
+# --------------------------------------------------
 
-def clean_text(text: str):
+STRONG_ACTION_VERBS = [
+    "developed",
+    "created",
+    "designed",
+    "implemented",
+    "managed",
+    "built",
+    "optimized",
+    "improved",
+    "analyzed",
+    "led",
+    "delivered",
+    "engineered",
+    "automated",
+    "configured",
+    "maintained",
+    "deployed",
+    "tested",
+    "coordinated",
+    "achieved",
+    "increased",
+    "reduced",
+    "streamlined",
+    "integrated",
+    "launched",
+    "executed",
+]
 
+
+# --------------------------------------------------
+# 4. TEXT CLEANING
+# --------------------------------------------------
+
+def clean_text(text):
     if not text:
         return ""
 
     text = str(text).lower()
+    text = text.replace("\n", " ")
+    text = text.replace("\t", " ")
     text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
 
-# ==========================================
-# FIND SKILLS
-# ==========================================
+# --------------------------------------------------
+# 5. CHECK WHETHER A TERM EXISTS
+# --------------------------------------------------
 
-def find_skills(text: str):
+def contains_term(text, term):
+    text = clean_text(text)
+    term = clean_text(term)
 
+    if not text or not term:
+        return False
+
+    pattern = (
+        r"(?<![a-z0-9])"
+        + re.escape(term)
+        + r"(?![a-z0-9])"
+    )
+
+    return re.search(pattern, text) is not None
+
+
+# --------------------------------------------------
+# 6. FIND SKILLS
+# --------------------------------------------------
+
+def find_skills(text):
     text = clean_text(text)
 
-    found = []
+    found_skills = []
 
-    for skill in SKILLS:
+    for skill, aliases in SKILL_ALIASES.items():
+        for alias in aliases:
+            if contains_term(text, alias):
+                found_skills.append(skill)
+                break
 
-        pattern = (
-            r"(?<![a-z0-9])"
-            + re.escape(skill.lower())
-            + r"(?![a-z0-9])"
-        )
-
-        if re.search(pattern, text):
-            found.append(skill)
-
-    # Avoid counting NLP separately when its full form exists.
-    if (
-        "natural language processing" in found
-        and "nlp" in found
-    ):
-        found.remove("nlp")
-
-    return found
+    return sorted(set(found_skills))
 
 
-# ==========================================
-# CHECK RESUME SECTIONS
-# ==========================================
+# --------------------------------------------------
+# 7. CHECK RESUME SECTIONS
+# --------------------------------------------------
 
-def check_resume_sections(resume_text: str):
-
+def check_resume_sections(resume_text):
     text = clean_text(resume_text)
 
-    section_results = {}
+    found_sections = []
 
-    for section, keywords in RESUME_SECTIONS.items():
+    for section in RESUME_SECTIONS:
+        if contains_term(text, section):
+            found_sections.append(section)
 
-        section_results[section] = any(
-            re.search(
-                r"(?<![a-z])"
-                + re.escape(keyword)
-                + r"(?![a-z])",
-                text
-            )
-            for keyword in keywords
-        )
-
-    present = [
+    missing_sections = [
         section
-        for section, found in section_results.items()
-        if found
+        for section in ["education", "experience", "skills", "projects"]
+        if section not in found_sections
     ]
 
-    missing = [
-        section
-        for section, found in section_results.items()
-        if not found
-    ]
-
-    return {
-        "present_sections": present,
-        "missing_sections": missing,
-        "section_details": section_results
-    }
+    return found_sections, missing_sections
 
 
-# ==========================================
-# CHECK ACTION VERBS
-# ==========================================
+# --------------------------------------------------
+# 8. CHECK ACTION VERBS
+# --------------------------------------------------
 
-def check_action_verbs(resume_text: str):
-
+def check_action_verbs(resume_text):
     text = clean_text(resume_text)
 
-    found_verbs = [
-        verb
-        for verb in STRONG_ACTION_VERBS
-        if re.search(
-            r"\b" + re.escape(verb) + r"\b",
-            text
-        )
-    ]
+    found_verbs = []
+
+    for verb in STRONG_ACTION_VERBS:
+        if contains_term(text, verb):
+            found_verbs.append(verb)
 
     return found_verbs
 
 
-# ==========================================
-# CHECK MEASURABLE ACHIEVEMENTS
-# ==========================================
+# --------------------------------------------------
+# 9. CHECK MEASURABLE ACHIEVEMENTS
+# --------------------------------------------------
 
-def check_achievements(resume_text: str):
-
+def check_achievements(resume_text):
     text = clean_text(resume_text)
 
-    patterns = [
-        r"\b\d+(?:\.\d+)?%",
-        r"\b\d+\+",
-        r"\b\d+\s+(?:users|customers|clients|projects|employees|records|sales)\b",
-        r"\b(increased|decreased|reduced|improved|saved|generated)\b"
+    has_numbers = bool(
+        re.search(r"\b\d+(\.\d+)?%?\b", text)
+    )
+
+    achievement_words = [
+        "increased",
+        "decreased",
+        "reduced",
+        "improved",
+        "saved",
+        "generated",
+        "achieved",
+        "growth",
+        "performance",
+        "efficiency",
     ]
 
-    return any(
-        re.search(pattern, text)
-        for pattern in patterns
+    has_achievement_words = any(
+        contains_term(text, word)
+        for word in achievement_words
     )
 
+    return has_numbers and has_achievement_words
 
-# ==========================================
-# CHECK CONTACT INFORMATION
-# ==========================================
 
-def check_contact_information(resume_text: str):
+# --------------------------------------------------
+# 10. CHECK CONTACT INFORMATION
+# --------------------------------------------------
 
-    email_pattern = (
-        r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
-    )
-
-    phone_pattern = (
-        r"(?<!\d)\+?\d[\d\s().-]{8,}\d(?!\d)"
-    )
+def check_contact_information(resume_text):
+    text = str(resume_text or "")
 
     email_found = bool(
-        re.search(email_pattern, resume_text)
+        re.search(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
+            text
+        )
     )
 
     phone_found = bool(
-        re.search(phone_pattern, resume_text)
+        re.search(
+            r"(\+?\d[\d\s().-]{7,}\d)",
+            text
+        )
     )
 
-    return {
-        "email": email_found,
-        "phone": phone_found,
-        "complete": email_found and phone_found
-    }
+    return email_found, phone_found
 
 
-# ==========================================
-# RESUME QUALITY ANALYSIS
-# ==========================================
+# --------------------------------------------------
+# 11. RESUME QUALITY ANALYSIS
+# --------------------------------------------------
 
-def analyze_resume_quality(
-    resume_text: str,
-    section_analysis: dict,
-    action_verbs: list,
-    has_achievements: bool
-):
-
-    contact = check_contact_information(resume_text)
-
-    sections = section_analysis["section_details"]
-
-    checks = {
-        "Email Address": contact["email"],
-        "Phone Number": contact["phone"],
-        "Education Section": sections.get("Education", False),
-        "Experience Section": sections.get("Experience", False),
-        "Skills Section": sections.get("Skills", False),
-        "Projects Section": sections.get("Projects", False),
-        "Measurable Achievements": has_achievements,
-        "Strong Action Verbs": len(action_verbs) > 0
-    }
-
-    weights = {
-        "Email Address": 7.5,
-        "Phone Number": 7.5,
-        "Education Section": 15,
-        "Experience Section": 15,
-        "Skills Section": 10,
-        "Projects Section": 10,
-        "Measurable Achievements": 15,
-        "Strong Action Verbs": 20
-    }
-
-    quality_score = sum(
-        weights[item]
-        for item, passed in checks.items()
-        if passed
+def analyze_resume_quality(resume_text):
+    sections, missing_sections = check_resume_sections(
+        resume_text
     )
 
-    quality_score = round(quality_score, 1)
+    action_verbs = check_action_verbs(resume_text)
 
-    strengths = [
-        item
-        for item, passed in checks.items()
-        if passed
-    ]
+    achievements = check_achievements(resume_text)
 
-    improvements = [
-        item
-        for item, passed in checks.items()
-        if not passed
-    ]
+    email_found, phone_found = check_contact_information(
+        resume_text
+    )
 
-    if quality_score >= 85:
-        quality_level = "Excellent"
+    score = 0
 
-    elif quality_score >= 70:
-        quality_level = "Good"
+    # Resume sections
+    score += min(len(sections) * 10, 40)
 
-    elif quality_score >= 50:
-        quality_level = "Average"
+    # Action verbs
+    score += min(len(action_verbs) * 5, 25)
 
-    else:
-        quality_level = "Needs Improvement"
+    # Measurable achievements
+    if achievements:
+        score += 20
+
+    # Contact information
+    if email_found:
+        score += 7
+
+    if phone_found:
+        score += 8
+
+    score = min(score, 100)
 
     return {
-        "quality_score": quality_score,
-        "quality_level": quality_level,
-        "checks": checks,
-        "strengths": strengths,
-        "improvements": improvements
+        "quality_score": score,
+        "sections": sections,
+        "missing_sections": missing_sections,
+        "action_verbs": action_verbs,
+        "has_measurable_achievements": achievements,
+        "has_email": email_found,
+        "has_phone": phone_found,
     }
 
 
-# ==========================================
-# RESUME STRENGTHS AND WEAKNESSES
-# ==========================================
+# --------------------------------------------------
+# 12. TF-IDF TEXT SIMILARITY
+# --------------------------------------------------
 
-def analyze_strengths_weaknesses(
-    resume_skills,
-    matched_skills,
-    missing_skills,
-    section_analysis,
-    action_verbs,
-    has_achievements,
-    resume_quality
-):
-
-    strengths = []
-    weaknesses = []
-    priority_improvements = []
-
-    sections = section_analysis["section_details"]
-
-    if sections.get("Education"):
-
-        strengths.append(
-            "Your resume includes an Education section."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume does not clearly include an Education section."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Missing Education section",
-            "recommendation": (
-                "Add your degree, institution name, "
-                "graduation year and relevant qualifications."
-            )
-        })
-
-    if sections.get("Experience"):
-
-        strengths.append(
-            "Your resume includes an Experience section."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume does not clearly include an Experience section."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Missing Experience section",
-            "recommendation": (
-                "Add relevant work experience, internships, "
-                "training or practical experience."
-            )
-        })
-
-    if sections.get("Skills"):
-
-        strengths.append(
-            "Your resume includes a Skills section."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume is missing a clearly identified Skills section."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Missing Skills section",
-            "recommendation": (
-                "Add a dedicated skills section containing "
-                "your relevant technical and professional skills."
-            )
-        })
-
-    if sections.get("Projects"):
-
-        strengths.append(
-            "Your resume includes a Projects section."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume does not clearly include a Projects section."
-        )
-
-        priority_improvements.append({
-            "priority": "Medium",
-            "issue": "Missing Projects section",
-            "recommendation": (
-                "Add academic or personal projects and describe "
-                "the technologies and skills you used."
-            )
-        })
-
-    if resume_skills:
-
-        strengths.append(
-            f"Your resume contains {len(resume_skills)} recognized skills."
-        )
-
-    else:
-
-        weaknesses.append(
-            "No recognized skills were detected in your resume."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Skills not detected",
-            "recommendation": (
-                "Include relevant technical and professional skills "
-                "that you genuinely possess."
-            )
-        })
-
-    if matched_skills:
-
-        strengths.append(
-            f"Your resume matches {len(matched_skills)} skills "
-            "from the job description."
-        )
-
-    if missing_skills:
-
-        weaknesses.append(
-            f"{len(missing_skills)} job-related skills are missing "
-            "from your resume."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Job-related skill gaps",
-            "recommendation": (
-                "If you genuinely have these skills, add relevant "
-                "examples and evidence: "
-                + ", ".join(missing_skills[:8])
-            )
-        })
-
-    if action_verbs:
-
-        strengths.append(
-            f"Your resume uses {len(action_verbs)} recognized "
-            "strong action verbs."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume does not contain recognized strong action verbs."
-        )
-
-        priority_improvements.append({
-            "priority": "Medium",
-            "issue": "Weak action language",
-            "recommendation": (
-                "Use action verbs such as Developed, Designed, "
-                "Implemented, Managed and Optimized where appropriate."
-            )
-        })
-
-    if has_achievements:
-
-        strengths.append(
-            "Your resume contains measurable achievement indicators."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume lacks clearly detected measurable achievements."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Missing measurable achievements",
-            "recommendation": (
-                "Where possible, include numbers, percentages, "
-                "project results, users supported or time saved."
-            )
-        })
-
-    quality_checks = resume_quality.get("checks", {})
-
-    if (
-        quality_checks.get("Email Address")
-        and quality_checks.get("Phone Number")
-    ):
-
-        strengths.append(
-            "Your resume contains both email and phone contact information."
-        )
-
-    else:
-
-        weaknesses.append(
-            "Your resume may be missing email or phone contact information."
-        )
-
-        priority_improvements.append({
-            "priority": "High",
-            "issue": "Incomplete contact information",
-            "recommendation": (
-                "Include a professional email address and "
-                "a valid phone number."
-            )
-        })
-
-    if not strengths:
-
-        strengths.append(
-            "Continue developing your resume with relevant skills, "
-            "projects and experience."
-        )
-
-    if not weaknesses:
-
-        weaknesses.append(
-            "No major weaknesses were detected by the current checks."
-        )
-
-    if not priority_improvements:
-
-        priority_improvements.append({
-            "priority": "Low",
-            "issue": "Continue improving your resume",
-            "recommendation": (
-                "Keep your resume updated and tailor it to "
-                "each job description."
-            )
-        })
-
-    return {
-        "strengths": strengths,
-        "weaknesses": weaknesses,
-        "priority_improvements": priority_improvements
-    }
-
-
-# ==========================================
-# TEXT SIMILARITY
-# ==========================================
-
-def calculate_similarity(resume_text: str, job_description: str):
-
+def calculate_similarity(resume_text, job_description):
     resume_text = clean_text(resume_text)
     job_description = clean_text(job_description)
 
@@ -563,232 +324,416 @@ def calculate_similarity(resume_text: str, job_description: str):
         return 0.0
 
     try:
-
         vectorizer = TfidfVectorizer(
             stop_words="english",
             ngram_range=(1, 2),
-            sublinear_tf=True
+            max_features=5000,
         )
 
-        vectors = vectorizer.fit_transform([
+        tfidf_matrix = vectorizer.fit_transform([
             resume_text,
-            job_description
+            job_description,
         ])
 
         similarity = cosine_similarity(
-            vectors[0:1],
-            vectors[1:2]
+            tfidf_matrix[0:1],
+            tfidf_matrix[1:2],
         )[0][0]
 
-        return float(similarity)
+        return round(float(similarity) * 100, 1)
 
     except ValueError:
-
         return 0.0
 
 
-# ==========================================
-# JOB READINESS RATING
-# ==========================================
+# --------------------------------------------------
+# 13. IMPROVED KEYWORD MATCHING
+# --------------------------------------------------
 
-def get_job_readiness(score: float):
+def calculate_keyword_match(resume_text, job_description):
+    resume_text = clean_text(resume_text)
+    job_description = clean_text(job_description)
 
-    if score >= 80:
+    stop_words = {
+        "the", "and", "for", "with", "you", "your", "our",
+        "are", "is", "was", "were", "will", "can", "must",
+        "should", "have", "has", "had", "this", "that",
+        "from", "into", "about", "who", "what", "when",
+        "where", "need", "needed", "looking", "seeking",
+        "candidate", "ability", "work", "working",
+        "good", "strong", "knowledge", "skills",
+    }
+
+    # Extract individual meaningful words.
+    words = re.findall(
+        r"\b[a-zA-Z][a-zA-Z0-9+#.]*\b",
+        job_description,
+    )
+
+    keywords = {
+        word.lower()
+        for word in words
+        if len(word) > 2 and word.lower() not in stop_words
+    }
+
+    # Add recognized multi-word technical skills.
+    for skill in SKILLS:
+        if contains_term(job_description, skill):
+            keywords.add(skill.lower())
+
+    if not keywords:
+        return 0.0, [], []
+
+    matched_keywords = []
+    missing_keywords = []
+
+    for keyword in sorted(keywords):
+        if contains_term(resume_text, keyword):
+            matched_keywords.append(keyword)
+        else:
+            missing_keywords.append(keyword)
+
+    score = (
+        len(matched_keywords) / len(keywords)
+    ) * 100
+
+    return (
+        round(score, 1),
+        matched_keywords,
+        missing_keywords,
+    )
+
+
+# --------------------------------------------------
+# 14. JOB READINESS
+# --------------------------------------------------
+
+def get_job_readiness(match_score):
+    if match_score >= 85:
         return "Excellent"
 
-    elif score >= 65:
+    elif match_score >= 70:
         return "Good"
 
-    elif score >= 45:
+    elif match_score >= 50:
         return "Average"
 
     else:
         return "Needs Improvement"
 
 
-# ==========================================
-# MAIN RESUME ANALYSIS
-# ==========================================
+# --------------------------------------------------
+# 15. STRENGTHS AND WEAKNESSES
+# --------------------------------------------------
 
-def analyze_resume(resume_text: str, job_description: str):
+def analyze_strengths_weaknesses(
+    resume_text,
+    matched_skills,
+    missing_skills,
+    sections,
+    action_verbs,
+    achievements,
+    email_found,
+    phone_found,
+):
+    strengths = []
+    weaknesses = []
+    priority_improvements = []
 
-    resume_text = clean_text(resume_text)
-    job_description = clean_text(job_description)
-
-    if len(resume_text) < 30:
-        raise ValueError("Resume contains insufficient readable text.")
-
-    if len(job_description) < 10:
-        raise ValueError("Please provide a valid job description.")
-
-    # TEXT SIMILARITY
-
-    similarity = calculate_similarity(
-        resume_text,
-        job_description
-    )
-
-    # SKILL MATCHING
-
-    resume_skills = find_skills(resume_text)
-
-    job_skills = find_skills(job_description)
-
-    matched = [
-        skill
-        for skill in job_skills
-        if skill in resume_skills
-    ]
-
-    missing = [
-        skill
-        for skill in job_skills
-        if skill not in resume_skills
-    ]
-
-    coverage = (
-        len(matched) / len(job_skills)
-        if job_skills else 0.0
-    )
-
-    # ATS SCORE
-
-    if job_skills:
-
-        score = (
-            similarity * 70
-            + coverage * 30
+    if matched_skills:
+        strengths.append(
+            f"Your resume matches {len(matched_skills)} job-related skills."
         )
 
-    else:
-
-        score = similarity * 100
-
-    score = round(max(0, min(100, score)), 1)
-
-    # RESUME SECTION CHECK
-
-    section_analysis = check_resume_sections(
-        resume_text
-    )
-
-    # ACTION VERB CHECK
-
-    action_verbs = check_action_verbs(
-        resume_text
-    )
-
-    # ACHIEVEMENT CHECK
-
-    has_achievements = check_achievements(
-        resume_text
-    )
-
-    # RESUME QUALITY
-
-    resume_quality = analyze_resume_quality(
-        resume_text,
-        section_analysis,
-        action_verbs,
-        has_achievements
-    )
-
-    # STRENGTHS AND WEAKNESSES
-
-    strengths_weaknesses = analyze_strengths_weaknesses(
-        resume_skills,
-        matched,
-        missing,
-        section_analysis,
-        action_verbs,
-        has_achievements,
-        resume_quality
-    )
-
-    # JOB READINESS
-
-    readiness = get_job_readiness(score)
-
-    # IMPROVEMENT SUGGESTIONS
-
-    suggestions = []
-
-    if missing:
-
-        suggestions.append(
-            "If you genuinely have these skills, add evidence of them: "
-            + ", ".join(missing[:8])
-            + "."
+    if sections:
+        strengths.append(
+            "Your resume contains recognizable sections."
         )
 
-    if similarity < 0.25:
-
-        suggestions.append(
-            "Tailor your professional summary and experience "
-            "to the responsibilities and terminology in the job description."
+    if action_verbs:
+        strengths.append(
+            f"Your resume uses {len(action_verbs)} recognized action verbs."
         )
 
-    if section_analysis["missing_sections"]:
+    if achievements:
+        strengths.append(
+            "Your resume contains measurable achievement evidence."
+        )
 
-        suggestions.append(
-            "Consider adding these resume sections where relevant: "
-            + ", ".join(section_analysis["missing_sections"])
-            + "."
+    if email_found and phone_found:
+        strengths.append(
+            "Your resume contains email and phone contact information."
+        )
+
+    if missing_skills:
+        weaknesses.append(
+            "Your resume is missing some skills required by the job description."
+        )
+
+        priority_improvements.append({
+            "priority": "High",
+            "issue": "Missing job-related skills",
+            "recommendation": (
+                "Add relevant missing skills only if you genuinely possess them."
+            ),
+        })
+
+    if "skills" not in sections and "technical skills" not in sections:
+        weaknesses.append(
+            "Your resume does not clearly include a Skills section."
+        )
+
+        priority_improvements.append({
+            "priority": "High",
+            "issue": "Missing Skills section",
+            "recommendation": (
+                "Add a clearly labelled Skills section where relevant to your background."
+            ),
+        })
+
+    if not achievements:
+        weaknesses.append(
+            "Measurable achievements were not clearly detected."
+        )
+
+        priority_improvements.append({
+            "priority": "Medium",
+            "issue": "Missing measurable achievements",
+            "recommendation": (
+                "Include genuine results using numbers, percentages, or measurable outcomes."
+            ),
+        })
+
+    if not email_found or not phone_found:
+        weaknesses.append(
+            "Your resume may be missing contact information."
         )
 
     if not action_verbs:
-
-        suggestions.append(
-            "Use strong action verbs such as Developed, "
-            "Implemented, Managed, Designed and Optimized."
+        weaknesses.append(
+            "Your resume could use stronger action verbs."
         )
 
-    if not has_achievements:
+    return {
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "priority_improvements": priority_improvements,
+    }
 
-        suggestions.append(
-            "Add measurable achievements such as percentages, "
-            "project counts, users supported or time saved."
+
+# --------------------------------------------------
+# 16. MAIN RESUME ANALYSIS FUNCTION
+# --------------------------------------------------
+
+def analyze_resume(resume_text, job_description):
+
+    resume_text = str(resume_text or "")
+    job_description = str(job_description or "")
+
+    if not resume_text.strip():
+        raise ValueError("Resume text is empty.")
+
+    if not job_description.strip():
+        raise ValueError("Job description is empty.")
+
+    # Detect skills
+    resume_skills = find_skills(resume_text)
+    job_skills = find_skills(job_description)
+
+    matched_skills = [
+        skill for skill in job_skills
+        if skill in resume_skills
+    ]
+
+    missing_skills = [
+        skill for skill in job_skills
+        if skill not in resume_skills
+    ]
+
+    # Skill coverage
+    if job_skills:
+        skill_coverage = (
+            len(matched_skills) / len(job_skills)
+        ) * 100
+    else:
+        skill_coverage = 0.0
+
+    skill_coverage = round(skill_coverage, 1)
+
+    # Text similarity
+    text_similarity = calculate_similarity(
+        resume_text,
+        job_description,
+    )
+
+    # Keyword matching
+    keyword_match, matched_keywords, missing_keywords = (
+        calculate_keyword_match(
+            resume_text,
+            job_description,
+        )
+    )
+
+    # Resume structure and evidence
+    sections, missing_sections = check_resume_sections(
+        resume_text
+    )
+
+    action_verbs = check_action_verbs(resume_text)
+
+    achievements = check_achievements(resume_text)
+
+    email_found, phone_found = check_contact_information(
+        resume_text
+    )
+
+    # Experience evidence score
+    experience_evidence = 0
+
+    if (
+        "experience" in sections
+        or "work experience" in sections
+        or "projects" in sections
+    ):
+        experience_evidence += 50
+
+    if action_verbs:
+        experience_evidence += 25
+
+    if achievements:
+        experience_evidence += 25
+
+    # Resume structure score
+    resume_structure = min(
+        len(sections) / 4 * 100,
+        100,
+    )
+
+    experience_evidence = round(
+        experience_evidence, 1
+    )
+
+    resume_structure = round(
+        resume_structure, 1
+    )
+
+    # ATS score calculation
+    if job_skills:
+        match_score = (
+            skill_coverage * 0.40
+            + text_similarity * 0.25
+            + keyword_match * 0.20
+            + experience_evidence * 0.10
+            + resume_structure * 0.05
         )
 
-    if not resume_quality["checks"]["Email Address"]:
-
-        suggestions.append(
-            "Add a professional email address to your resume."
+    else:
+        match_score = (
+            text_similarity * 0.60
+            + keyword_match * 0.30
+            + resume_structure * 0.10
         )
 
-    if not resume_quality["checks"]["Phone Number"]:
+    match_score = round(
+        max(0, min(match_score, 100)),
+        1,
+    )
 
+    # Resume quality
+    resume_quality = analyze_resume_quality(
+        resume_text
+    )
+
+    # Strengths and weaknesses
+    strengths_weaknesses = analyze_strengths_weaknesses(
+        resume_text,
+        matched_skills,
+        missing_skills,
+        sections,
+        action_verbs,
+        achievements,
+        email_found,
+        phone_found,
+    )
+
+    # Suggestions
+    suggestions = []
+
+    if missing_skills:
         suggestions.append(
-            "Add a valid contact phone number to your resume."
+            "Consider adding relevant missing skills if you have those skills."
+        )
+
+    if not achievements:
+        suggestions.append(
+            "Add measurable achievements to demonstrate your impact."
+        )
+
+    if "skills" not in sections and "technical skills" not in sections:
+        suggestions.append(
+            "Add a clearly labelled Skills section."
+        )
+
+    if not action_verbs:
+        suggestions.append(
+            "Use strong action verbs to describe your work and projects."
+        )
+
+    if not email_found or not phone_found:
+        suggestions.append(
+            "Make sure your contact information is clearly visible."
         )
 
     if not suggestions:
-
         suggestions.append(
-            "Your resume has a good match. Continue improving "
-            "your experience descriptions with specific achievements."
+            "Continue tailoring your resume to the specific job description."
         )
 
-    suggestions.append(
-        "Use standard ATS-friendly headings and a simple, "
-        "readable resume layout."
+    job_readiness = get_job_readiness(
+        match_score
     )
 
-    # FINAL RESPONSE
-
+    # Final result
     return {
-        "match_score": score,
-        "text_similarity": round(similarity * 100, 1),
-        "skill_coverage": round(coverage * 100, 1),
+        "match_score": match_score,
+
+        "text_similarity": text_similarity,
+
+        "skill_coverage": skill_coverage,
+
         "resume_skills": resume_skills,
+
         "job_skills": job_skills,
-        "matched_skills": matched,
-        "missing_skills": missing,
+
+        "matched_skills": matched_skills,
+
+        "missing_skills": missing_skills,
+
         "suggestions": suggestions,
-        "job_readiness": readiness,
-        "resume_sections": section_analysis,
+
+        "job_readiness": job_readiness,
+
+        "resume_sections": sections,
+
         "action_verbs": action_verbs,
-        "has_measurable_achievements": has_achievements,
+
+        "has_measurable_achievements": achievements,
+
         "resume_quality": resume_quality,
-        "strengths_weaknesses": strengths_weaknesses
+
+        "strengths_weaknesses": strengths_weaknesses,
+
+        "keyword_match": keyword_match,
+
+        "matched_keywords": matched_keywords,
+
+        "missing_keywords": missing_keywords,
+
+        "score_breakdown": {
+            "skill_match": skill_coverage,
+            "text_similarity": text_similarity,
+            "keyword_match": keyword_match,
+            "experience_evidence": experience_evidence,
+            "resume_structure": resume_structure,
+        },
     }

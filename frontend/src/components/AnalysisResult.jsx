@@ -6,17 +6,33 @@ import ScoreCard from "./ScoreCard";
 function AnalysisResult({ result }) {
     if (!result) return null;
 
-    // DATA
+    // ==========================================
+    // 1. DATA FROM BACKEND
+    // ==========================================
+
     const quality = result.resume_quality || {};
-    const qualityScore = quality.quality_score ?? 0;
-    const qualityLevel = quality.quality_level || "Not Available";
-    const qualityChecks = quality.checks || {};
-    const qualityStrengths = quality.strengths || [];
-    const qualityImprovements = quality.improvements || [];
+
+    const qualityScore = Number(quality.quality_score) || 0;
+
+    const qualityLevel =
+        qualityScore >= 80 ? "Excellent" :
+        qualityScore >= 60 ? "Good" :
+        qualityScore >= 40 ? "Average" :
+        "Needs Improvement";
+
+    const qualityChecks = {
+        "Resume sections": (quality.sections || []).length > 0,
+        "Action verbs": (quality.action_verbs || []).length > 0,
+        "Measurable achievements": !!quality.has_measurable_achievements,
+        "Email address": !!quality.has_email,
+        "Phone number": !!quality.has_phone,
+    };
 
     const strengthsWeaknesses = result.strengths_weaknesses || {};
+
     const resumeStrengths = strengthsWeaknesses.strengths || [];
     const resumeWeaknesses = strengthsWeaknesses.weaknesses || [];
+
     const priorityImprovements =
         strengthsWeaknesses.priority_improvements || [];
 
@@ -24,7 +40,56 @@ function AnalysisResult({ result }) {
     const missingSkills = result.missing_skills || [];
     const suggestions = result.suggestions || [];
 
+    const actionVerbs = result.action_verbs || [];
+
+    // Backend currently returns resume_sections as an array.
+    // This also supports the older object format.
+    const presentSections = Array.isArray(result.resume_sections)
+        ? result.resume_sections
+        : result.resume_sections?.present_sections || [];
+
+    const missingSections = Array.isArray(result.resume_sections)
+        ? quality.missing_sections || []
+        : result.resume_sections?.missing_sections || [];
+
+    // Generate quality strengths and improvement messages.
+    const qualityStrengths = [
+        ...(quality.sections?.length
+            ? ["Your resume contains recognizable sections."]
+            : []),
+
+        ...(quality.action_verbs?.length
+            ? ["Your resume uses strong action verbs."]
+            : []),
+
+        ...(quality.has_measurable_achievements
+            ? ["Your resume contains measurable achievements."]
+            : []),
+
+        ...(quality.has_email && quality.has_phone
+            ? ["Your resume includes email and phone contact information."]
+            : []),
+    ];
+
+    const qualityImprovements = [
+        ...missingSections.map(
+            section => `Consider adding a clearly labelled ${section} section.`
+        ),
+
+        ...(!quality.has_measurable_achievements
+            ? ["Add genuine measurable achievements to your resume."]
+            : []),
+
+        ...(!quality.has_email || !quality.has_phone
+            ? ["Make sure your contact information is clearly visible."]
+            : []),
+    ];
+
     const matchScore = Number(result.match_score) || 0;
+
+    // ==========================================
+    // 2. SCORE LABEL
+    // ==========================================
 
     const getScoreLabel = (score) => {
         if (score >= 80) return "Excellent Match";
@@ -32,6 +97,10 @@ function AnalysisResult({ result }) {
         if (score >= 40) return "Needs Improvement";
         return "Low Match";
     };
+
+    // ==========================================
+    // 3. PRIORITY CLASS
+    // ==========================================
 
     const getPriorityClass = (priority) => {
         const value = (priority || "medium").toLowerCase();
@@ -42,7 +111,10 @@ function AnalysisResult({ result }) {
         return "priority-medium";
     };
 
-    // PDF REPORT
+    // ==========================================
+    // 4. PDF REPORT DOWNLOAD
+    // ==========================================
+
     const downloadReport = () => {
         const pdf = new jsPDF("p", "mm", "a4");
 
@@ -75,11 +147,17 @@ function AnalysisResult({ result }) {
             pdf.setTextColor(...colors.white);
             pdf.setFont("helvetica", "bold");
             pdf.setFontSize(19);
+
             pdf.text("AI RESUME ANALYZER", margin, 17);
 
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(10);
-            pdf.text("Professional Resume Analysis Report", margin, 27);
+
+            pdf.text(
+                "Professional Resume Analysis Report",
+                margin,
+                27
+            );
 
             y = 49;
         };
@@ -88,13 +166,21 @@ function AnalysisResult({ result }) {
             checkPage(20);
 
             pdf.setFillColor(...colors.lightBlue);
+
             pdf.roundedRect(
-                margin, y - 5, contentWidth, 11, 2, 2, "F"
+                margin,
+                y - 5,
+                contentWidth,
+                11,
+                2,
+                2,
+                "F"
             );
 
             pdf.setTextColor(...colors.navy);
             pdf.setFont("helvetica", "bold");
             pdf.setFontSize(12);
+
             pdf.text(title, margin + 4, y + 2);
 
             y += 15;
@@ -109,11 +195,13 @@ function AnalysisResult({ result }) {
             );
 
             const height = lines.length * 6 + 3;
+
             checkPage(height);
 
             pdf.setTextColor(...colors.navy);
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(10);
+
             pdf.text(lines, margin + 4, y);
 
             y += height;
@@ -122,35 +210,52 @@ function AnalysisResult({ result }) {
         const addList = (title, items) => {
             addSection(title);
 
-            if (!items || items.length === 0) {
-                addText("None identified");
+            if (!Array.isArray(items) || items.length === 0) {
+                addText("None identified.");
             } else {
-                items.forEach((item) => addText(item, true));
+                items.forEach(item => addText(item, true));
             }
 
             y += 4;
         };
 
         // REPORT CONTENT
+
         addHeader();
 
         addSection("RESUME INFORMATION");
+
         addText(`Resume Name: ${result.filename || "Resume"}`);
+
         addText(`Analysis ID: ${result.analysis_id || "N/A"}`);
 
+        // ATS SCORE
+
         addSection("ATS COMPATIBILITY");
+
         checkPage(35);
 
         pdf.setFillColor(...colors.lightBlue);
-        pdf.roundedRect(margin, y - 3, contentWidth, 25, 3, 3, "F");
+
+        pdf.roundedRect(
+            margin,
+            y - 3,
+            contentWidth,
+            25,
+            3,
+            3,
+            "F"
+        );
 
         pdf.setTextColor(...colors.navy);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(11);
+
         pdf.text("ATS MATCH SCORE", margin + 5, y + 6);
 
         pdf.setFontSize(21);
         pdf.setTextColor(...colors.blue);
+
         pdf.text(
             `${matchScore}%`,
             pageWidth - margin - 5,
@@ -160,35 +265,75 @@ function AnalysisResult({ result }) {
 
         y += 32;
 
-        addText(`Text Similarity: ${result.text_similarity ?? "N/A"}%`);
-        addText(`Skill Coverage: ${result.skill_coverage ?? "N/A"}%`);
+        addText(
+            `Text Similarity: ${result.text_similarity ?? "N/A"}%`
+        );
+
+        addText(
+            `Skill Coverage: ${result.skill_coverage ?? "N/A"}%`
+        );
+
+        addText(
+            `Keyword Match: ${result.keyword_match ?? "N/A"}%`
+        );
+
+        // JOB READINESS
 
         addSection("JOB READINESS");
+
         checkPage(18);
 
         pdf.setFillColor(...colors.green);
-        pdf.roundedRect(margin, y - 4, contentWidth, 13, 2, 2, "F");
+
+        pdf.roundedRect(
+            margin,
+            y - 4,
+            contentWidth,
+            13,
+            2,
+            2,
+            "F"
+        );
 
         pdf.setTextColor(...colors.navy);
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(11);
-        pdf.text(result.job_readiness || "Not Available", margin + 5, y + 4);
+
+        pdf.text(
+            result.job_readiness || "Not Available",
+            margin + 5,
+            y + 4
+        );
 
         y += 17;
 
+        // RESUME QUALITY
+
         addSection("RESUME QUALITY");
+
         addText(`Quality Score: ${qualityScore}/100`);
+
         addText(`Quality Level: ${qualityLevel}`);
 
+        addSection("QUALITY CHECKS");
+
         Object.entries(qualityChecks).forEach(([name, passed]) => {
-            addText(`${name}: ${passed ? "Passed" : "Needs Improvement"}`);
+            addText(
+                `${name}: ${passed ? "Passed" : "Needs Improvement"}`
+            );
         });
 
         addList("QUALITY STRENGTHS", qualityStrengths);
+
         addList("QUALITY IMPROVEMENTS", qualityImprovements);
 
+        // STRENGTHS AND WEAKNESSES
+
         addList("RESUME STRENGTHS", resumeStrengths);
+
         addList("RESUME WEAKNESSES", resumeWeaknesses);
+
+        // PRIORITY IMPROVEMENTS
 
         addSection("PRIORITY IMPROVEMENTS");
 
@@ -197,6 +342,7 @@ function AnalysisResult({ result }) {
                 addText(
                     `${index + 1}. ${item.priority || "Medium"} Priority - ${item.issue || "Improvement"}`
                 );
+
                 addText(
                     `Recommendation: ${item.recommendation || "Review this area."}`,
                     true
@@ -206,19 +352,23 @@ function AnalysisResult({ result }) {
             addText("No priority improvements identified.");
         }
 
-        addList(
-            "PRESENT RESUME SECTIONS",
-            result.resume_sections?.present_sections
-        );
+        // RESUME SECTIONS
 
-        addList(
-            "MISSING RESUME SECTIONS",
-            result.resume_sections?.missing_sections
-        );
+        addList("PRESENT RESUME SECTIONS", presentSections);
+
+        addList("MISSING RESUME SECTIONS", missingSections);
+
+        // SKILLS
 
         addList("MATCHED SKILLS", matchedSkills);
+
         addList("MISSING SKILLS", missingSkills);
-        addList("STRONG ACTION VERBS", result.action_verbs || []);
+
+        // ACTION VERBS
+
+        addList("STRONG ACTION VERBS", actionVerbs);
+
+        // ACHIEVEMENTS
 
         addSection("MEASURABLE ACHIEVEMENTS");
 
@@ -228,22 +378,60 @@ function AnalysisResult({ result }) {
                 : "No measurable achievements were detected."
         );
 
+        // SUGGESTIONS
+
         addList("IMPROVEMENT SUGGESTIONS", suggestions);
 
-        // FOOTER
+        // KEYWORDS
+
+        addList(
+            "MATCHED JOB KEYWORDS",
+            result.matched_keywords || []
+        );
+
+        addList(
+            "MISSING JOB KEYWORDS",
+            result.missing_keywords || []
+        );
+
+        // SCORE BREAKDOWN
+
+        addSection("ATS SCORE BREAKDOWN");
+
+        Object.entries(result.score_breakdown || {}).forEach(
+            ([name, value]) => {
+                addText(
+                    `${name.replace(/_/g, " ")}: ${value}%`
+                );
+            }
+        );
+
+        // PDF FOOTER
+
         const totalPages = pdf.internal.getNumberOfPages();
 
         for (let i = 1; i <= totalPages; i++) {
             pdf.setPage(i);
 
             pdf.setDrawColor(220, 230, 235);
-            pdf.line(margin, 283, pageWidth - margin, 283);
+
+            pdf.line(
+                margin,
+                283,
+                pageWidth - margin,
+                283
+            );
 
             pdf.setFont("helvetica", "normal");
             pdf.setFontSize(8);
             pdf.setTextColor(...colors.gray);
 
-            pdf.text("AI Resume Analyzer", margin, 289);
+            pdf.text(
+                "AI Resume Analyzer",
+                margin,
+                289
+            );
+
             pdf.text(
                 `Page ${i} of ${totalPages}`,
                 pageWidth - margin,
@@ -255,15 +443,26 @@ function AnalysisResult({ result }) {
         pdf.save("Professional_AI_Resume_Report.pdf");
     };
 
+    // ==========================================
+    // 5. FRONTEND DISPLAY
+    // ==========================================
+
     return (
         <section className="result-section compact-results">
 
             {/* TOP HEADING */}
+
             <div className="compact-result-heading">
                 <div>
-                    <span className="section-tag">YOUR RESULTS</span>
+                    <span className="section-tag">
+                        YOUR RESULTS
+                    </span>
+
                     <h2>Resume Analysis</h2>
-                    <p>{result.filename || "Your uploaded resume"}</p>
+
+                    <p>
+                        {result.filename || "Your uploaded resume"}
+                    </p>
                 </div>
 
                 <button
@@ -276,6 +475,7 @@ function AnalysisResult({ result }) {
             </div>
 
             {/* MAIN SCORE */}
+
             <div className="quick-score-card">
                 <div className="quick-score-main">
                     <ScoreCard score={matchScore} />
@@ -304,8 +504,10 @@ function AnalysisResult({ result }) {
                 </div>
             </div>
 
-            {/* SKILL SUMMARY */}
+            {/* QUICK STATS */}
+
             <div className="quick-stats-grid">
+
                 <div className="quick-stat-card">
                     <span className="quick-stat-icon">✓</span>
                     <strong>{matchedSkills.length}</strong>
@@ -323,16 +525,21 @@ function AnalysisResult({ result }) {
                     <strong>{qualityScore}/100</strong>
                     <span>Resume Quality</span>
                 </div>
+
             </div>
 
             {/* MATCHED SKILLS */}
+
             <div className="quick-result-card">
                 <h3>✓ Skills you already have</h3>
 
                 {matchedSkills.length > 0 ? (
                     <div className="skill-tags">
                         {matchedSkills.slice(0, 8).map((skill, index) => (
-                            <span className="skill-tag matched-tag" key={index}>
+                            <span
+                                className="skill-tag matched-tag"
+                                key={index}
+                            >
                                 {skill}
                             </span>
                         ))}
@@ -343,18 +550,23 @@ function AnalysisResult({ result }) {
             </div>
 
             {/* MISSING SKILLS */}
+
             <div className="quick-result-card">
                 <h3>! Skills to check</h3>
 
                 <p className="quick-card-description">
-                    These skills appear in the job description but were not found
-                    in your resume. Add them only if you genuinely have them.
+                    These skills appear in the job description but were
+                    not found in your resume. Add them only if you
+                    genuinely have them.
                 </p>
 
                 {missingSkills.length > 0 ? (
                     <div className="skill-tags">
                         {missingSkills.slice(0, 8).map((skill, index) => (
-                            <span className="skill-tag missing-tag" key={index}>
+                            <span
+                                className="skill-tag missing-tag"
+                                key={index}
+                            >
                                 {skill}
                             </span>
                         ))}
@@ -365,12 +577,14 @@ function AnalysisResult({ result }) {
 
                 {missingSkills.length > 8 && (
                     <p className="quick-card-description">
-                        And {missingSkills.length - 8} more. See full details below.
+                        And {missingSkills.length - 8} more.
+                        See full details below.
                     </p>
                 )}
             </div>
 
             {/* TOP IMPROVEMENTS */}
+
             <div className="quick-result-card">
                 <h3>💡 What should you improve?</h3>
 
@@ -386,16 +600,22 @@ function AnalysisResult({ result }) {
             </div>
 
             {/* PRIORITY IMPROVEMENTS */}
+
             {priorityImprovements.length > 0 && (
                 <div className="quick-result-card">
                     <h3>🚀 Important improvements</h3>
 
                     {priorityImprovements.slice(0, 3).map((item, index) => (
-                        <div className="quick-priority-item" key={index}>
+                        <div
+                            className="quick-priority-item"
+                            key={index}
+                        >
                             <div className="quick-priority-heading">
                                 <strong>{item.issue}</strong>
 
-                                <span className={`priority-badge ${getPriorityClass(item.priority)}`}>
+                                <span
+                                    className={`priority-badge ${getPriorityClass(item.priority)}`}
+                                >
                                     {item.priority || "Medium"}
                                 </span>
                             </div>
@@ -407,27 +627,39 @@ function AnalysisResult({ result }) {
             )}
 
             {/* EXPANDABLE DETAILS */}
+
             <div className="additional-results">
 
                 <h3>Want more details?</h3>
-                <p>Open any section to see your complete analysis.</p>
+
+                <p>
+                    Open any section to see your complete analysis.
+                </p>
+
+                {/* QUALITY DETAILS */}
 
                 <details className="result-details">
                     <summary>Resume Quality Details</summary>
 
                     <div className="details-content">
-                        <h4>{qualityScore}/100 — {qualityLevel}</h4>
+
+                        <h4>
+                            {qualityScore}/100 — {qualityLevel}
+                        </h4>
 
                         <h4>Quality Checks</h4>
 
-                        {Object.entries(qualityChecks).map(([name, passed]) => (
-                            <p key={name}>
-                                {passed ? "✓" : "!"} {name}:{" "}
-                                {passed ? "Passed" : "Needs improvement"}
-                            </p>
-                        ))}
+                        {Object.entries(qualityChecks).map(
+                            ([name, passed]) => (
+                                <p key={name}>
+                                    {passed ? "✓" : "!"} {name}:{" "}
+                                    {passed ? "Passed" : "Needs improvement"}
+                                </p>
+                            )
+                        )}
 
                         <h4>Quality Strengths</h4>
+
                         <ul>
                             {qualityStrengths.length > 0
                                 ? qualityStrengths.map((item, index) => (
@@ -437,6 +669,7 @@ function AnalysisResult({ result }) {
                         </ul>
 
                         <h4>Quality Improvements</h4>
+
                         <ul>
                             {qualityImprovements.length > 0
                                 ? qualityImprovements.map((item, index) => (
@@ -444,14 +677,19 @@ function AnalysisResult({ result }) {
                                 ))
                                 : <li>No improvements identified.</li>}
                         </ul>
+
                     </div>
                 </details>
+
+                {/* STRENGTHS AND WEAKNESSES */}
 
                 <details className="result-details">
                     <summary>Resume Strengths and Weaknesses</summary>
 
                     <div className="details-content">
+
                         <h4>Strengths</h4>
+
                         <ul>
                             {resumeStrengths.length > 0
                                 ? resumeStrengths.map((item, index) => (
@@ -461,6 +699,7 @@ function AnalysisResult({ result }) {
                         </ul>
 
                         <h4>Weaknesses</h4>
+
                         <ul>
                             {resumeWeaknesses.length > 0
                                 ? resumeWeaknesses.map((item, index) => (
@@ -468,14 +707,19 @@ function AnalysisResult({ result }) {
                                 ))
                                 : <li>No major weaknesses detected.</li>}
                         </ul>
+
                     </div>
                 </details>
+
+                {/* ALL SKILLS */}
 
                 <details className="result-details">
                     <summary>All Matching and Missing Skills</summary>
 
                     <div className="details-content">
+
                         <h4>Matched Skills ({matchedSkills.length})</h4>
+
                         <ul>
                             {matchedSkills.length > 0
                                 ? matchedSkills.map((skill, index) => (
@@ -485,6 +729,7 @@ function AnalysisResult({ result }) {
                         </ul>
 
                         <h4>Missing Skills ({missingSkills.length})</h4>
+
                         <ul>
                             {missingSkills.length > 0
                                 ? missingSkills.map((skill, index) => (
@@ -492,79 +737,148 @@ function AnalysisResult({ result }) {
                                 ))
                                 : <li>None detected.</li>}
                         </ul>
+
                     </div>
                 </details>
+
+                {/* RESUME SECTIONS */}
 
                 <details className="result-details">
                     <summary>Resume Sections</summary>
 
                     <div className="details-content">
-                        <h4>Present Sections</h4>
+
+                        <h4>Present Sections ({presentSections.length})</h4>
+
                         <ul>
-                            {(result.resume_sections?.present_sections || []).map(
-                                (item, index) => <li key={index}>{item}</li>
-                            )}
+                            {presentSections.length > 0
+                                ? presentSections.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))
+                                : <li>No resume sections detected.</li>}
                         </ul>
 
-                        <h4>Missing Sections</h4>
+                        <h4>Missing Sections ({missingSections.length})</h4>
+
                         <ul>
-                            {(result.resume_sections?.missing_sections || []).map(
-                                (item, index) => <li key={index}>{item}</li>
-                            )}
+                            {missingSections.length > 0
+                                ? missingSections.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))
+                                : <li>No missing sections detected.</li>}
                         </ul>
+
                     </div>
                 </details>
+
+                {/* ACTION VERBS AND ACHIEVEMENTS */}
 
                 <details className="result-details">
                     <summary>Action Verbs and Achievements</summary>
 
                     <div className="details-content">
+
                         <h4>Strong Action Verbs</h4>
+
                         <ul>
-                            {(result.action_verbs || []).map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
+                            {actionVerbs.length > 0
+                                ? actionVerbs.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))
+                                : <li>No action verbs detected.</li>}
                         </ul>
 
                         <h4>Measurable Achievements</h4>
+
                         <p>
                             {result.has_measurable_achievements
                                 ? "Measurable achievements were detected."
                                 : "No measurable achievements were detected."}
                         </p>
+
                     </div>
                 </details>
+
+                {/* ALL SUGGESTIONS */}
 
                 <details className="result-details">
                     <summary>All Improvement Suggestions</summary>
 
                     <div className="details-content">
+
                         <ul>
-                            {suggestions.map((item, index) => (
-                                <li key={index}>{item}</li>
-                            ))}
+                            {suggestions.length > 0
+                                ? suggestions.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))
+                                : <li>No suggestions available.</li>}
                         </ul>
+
                     </div>
                 </details>
+
+                {/* PRIORITY IMPROVEMENTS */}
 
                 <details className="result-details">
                     <summary>All Priority Improvements</summary>
 
                     <div className="details-content">
+
                         {priorityImprovements.length > 0
                             ? priorityImprovements.map((item, index) => (
-                                <div key={index} className="quick-priority-item">
+                                <div
+                                    key={index}
+                                    className="quick-priority-item"
+                                >
                                     <strong>
                                         {item.issue} — {item.priority || "Medium"}
                                     </strong>
+
                                     <p>{item.recommendation}</p>
                                 </div>
                             ))
                             : <p>No priority improvements identified.</p>}
+
+                    </div>
+                </details>
+
+                {/* KEYWORD ANALYSIS */}
+
+                <details className="result-details">
+                    <summary>Job Description Keyword Analysis</summary>
+
+                    <div className="details-content">
+
+                        <h4>
+                            Keyword Match: {result.keyword_match ?? 0}%
+                        </h4>
+
+                        <h4>Matched Keywords</h4>
+
+                        <ul>
+                            {(result.matched_keywords || []).length > 0
+                                ? result.matched_keywords.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))
+                                : <li>No matched keywords.</li>}
+                        </ul>
+
+                        <h4>Missing Keywords</h4>
+
+                        <ul>
+                            {(result.missing_keywords || []).length > 0
+                                ? result.missing_keywords.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))
+                                : <li>No missing keywords.</li>}
+                        </ul>
+
                     </div>
                 </details>
 
             </div>
+
+            {/* ANALYSIS ID */}
 
             <p className="analysis-id">
                 Analysis ID: {result.analysis_id || "N/A"}

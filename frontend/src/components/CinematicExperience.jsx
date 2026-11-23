@@ -1,949 +1,935 @@
 
-import React, { useEffect, useRef } from "react";
-
-const styles = `
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
-.cinematic {
-  --bg: #080b12;
-  --panel: #101725;
-  --text: #f5f7ff;
-  --muted: #9ba8bd;
-  --cyan: #50e5dc;
-  --purple: #9b83ff;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  overflow: hidden;
-}
-
-.cinematic * { box-sizing: border-box; }
-
-.cinematic h1,
-.cinematic h2,
-.cinematic h3 {
-  font-family: 'Space Grotesk', sans-serif;
-  margin: 0;
-}
-
-.cinematic .scene {
-  min-height: 100vh;
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 100px 8%;
-  isolation: isolate;
-}
-
-.cinematic .scene-inner {
-  width: 100%;
-  max-width: 1250px;
-  margin: auto;
-  position: relative;
-  z-index: 2;
-}
-
-.cinematic .eyebrow {
-  color: var(--cyan);
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  font-size: 11px;
-  font-weight: 800;
-  margin-bottom: 22px;
-}
-
-.cinematic .gradient-text {
-  background: linear-gradient(100deg, #ffffff, #65e9df 55%, #a58cff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.cinematic .muted { color: var(--muted); }
-
-.cinematic .scene-one {
-  background:
-    radial-gradient(ellipse at 75% 40%, #153b4b 0%, transparent 35%),
-    radial-gradient(ellipse at 20% 90%, #28204b 0%, transparent 40%),
-    var(--bg);
-}
-
-.cinematic .scene-one::before,
-.cinematic .scene-two::before,
-.cinematic .scene-three::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .2;
-  background-image:
-    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-  background-size: 55px 55px;
-  mask-image: linear-gradient(to bottom, black, transparent);
-}
-
-.cinematic .hero-grid {
-  display: grid;
-  grid-template-columns: 1.1fr .9fr;
-  gap: 65px;
-  align-items: center;
-}
-
-.cinematic .hero-title {
-  font-size: clamp(48px, 6.8vw, 88px);
-  line-height: .99;
-  letter-spacing: -5px;
-  max-width: 720px;
-  margin-bottom: 28px;
-}
-
-.cinematic .hero-description {
-  max-width: 520px;
-  font-size: 17px;
-  line-height: 1.8;
-  color: var(--muted);
-}
-
-.cinematic .hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-top: 35px;
-  flex-wrap: wrap;
-}
-
-.cinematic .primary-button {
-  border: 0;
-  border-radius: 9px;
-  padding: 15px 23px;
-  color: #071313;
-  background: linear-gradient(110deg, #50e5dc, #9b83ff);
-  font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
-  transition: transform .25s, box-shadow .25s;
-}
-
-.cinematic .primary-button:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 35px #50e5dc35;
-}
-
-.cinematic .secondary-button {
-  border: 1px solid #ffffff30;
-  border-radius: 9px;
-  padding: 14px 21px;
-  color: white;
-  background: transparent;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.cinematic .hero-note {
-  color: #8290a5;
-  font-size: 12px;
-  margin-top: 22px;
-}
-
-.cinematic .resume-stage {
-  min-height: 440px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  perspective: 1000px;
-}
-
-.cinematic .resume-card {
-  width: min(300px, 80%);
-  min-height: 370px;
-  background: linear-gradient(145deg, #182335, #0c111c);
-  border: 1px solid #ffffff28;
-  border-radius: 15px;
-  padding: 30px;
-  transform: rotateY(-13deg) rotateX(5deg);
-  box-shadow: 0 35px 100px #000b, 0 0 55px #50e5dc16;
-  animation: resumeFloat 5s ease-in-out infinite;
-  position: relative;
-  z-index: 2;
-}
-
-.cinematic .resume-heading {
-  font-size: 25px;
-  font-weight: 800;
-  margin-bottom: 7px;
-}
-
-.cinematic .resume-sub {
-  font-size: 10px;
-  color: var(--cyan);
-  letter-spacing: 2px;
-}
-
-.cinematic .resume-line {
-  height: 6px;
-  border-radius: 10px;
-  background: #65758d38;
-  margin-top: 17px;
-}
-
-.cinematic .resume-line.short { width: 50%; }
-.cinematic .resume-line.medium { width: 75%; }
-
-.cinematic .resume-section {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: #a8b8d0;
-  margin-top: 28px;
-}
-
-.cinematic .floating-chip {
-  position: absolute;
-  z-index: 3;
-  background: #172638e8;
-  border: 1px solid #50e5dc55;
-  border-radius: 10px;
-  padding: 13px 17px;
-  color: #dffefa;
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 15px 40px #0008;
-  animation: chipFloat 4s ease-in-out infinite;
-}
-
-.cinematic .chip-one { top: 12%; right: 0; }
-.cinematic .chip-two { bottom: 14%; left: 0; animation-delay: -2s; }
-
-.cinematic .orb {
-  position: absolute;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: #50e5dc;
-  opacity: .08;
-  filter: blur(85px);
-}
-
-.cinematic .scroll-cue {
-  position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #8290a5;
-  font-size: 11px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-.cinematic .scene-two {
-  background:
-    radial-gradient(ellipse at 15% 45%, #26305a 0%, transparent 40%),
-    #0b101a;
-}
-
-.cinematic .section-title {
-  font-size: clamp(38px, 5vw, 64px);
-  letter-spacing: -3px;
-  line-height: 1.08;
-  margin-bottom: 20px;
-}
-
-.cinematic .section-description {
-  color: var(--muted);
-  line-height: 1.8;
-  max-width: 650px;
-  font-size: 16px;
-}
-
-.cinematic .analysis-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 65px;
-  align-items: center;
-  margin-top: 55px;
-}
-
-.cinematic .analysis-window {
-  background: #111a29;
-  border: 1px solid #ffffff1a;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 30px 80px #0005;
-  position: relative;
-  overflow: hidden;
-}
-
-.cinematic .window-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #ffffff15;
-  font-size: 12px;
-  color: #aab7ca;
-}
-
-.cinematic .window-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.cinematic .window-dots span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #607087;
-}
-
-.cinematic .document-preview {
-  padding: 25px 12px;
-  position: relative;
-}
-
-.cinematic .scan-line {
-  height: 2px;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 20px;
-  background: var(--cyan);
-  box-shadow: 0 0 15px var(--cyan);
-  animation: scan 4s ease-in-out infinite;
-  z-index: 2;
-}
-
-.cinematic .document-preview .resume-line {
-  margin-top: 16px;
-  background: #63748c38;
-}
-
-.cinematic .detected {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 0;
-  border-bottom: 1px solid #ffffff10;
-  font-size: 13px;
-}
-
-.cinematic .detected strong { color: var(--cyan); }
-
-.cinematic .analysis-features {
-  display: grid;
-  gap: 25px;
-  margin-top: 32px;
-}
-
-.cinematic .feature {
-  display: flex;
-  gap: 17px;
-  align-items: flex-start;
-}
-
-.cinematic .feature-icon {
-  width: 43px;
-  height: 43px;
-  flex-shrink: 0;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
-  color: var(--cyan);
-  background: #50e5dc12;
-  border: 1px solid #50e5dc28;
-  font-size: 19px;
-}
-
-.cinematic .feature h3 {
-  font-size: 17px;
-  margin-bottom: 7px;
-}
-
-.cinematic .feature p {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.7;
-  margin: 0;
-}
-
-.cinematic .scene-three {
-  background:
-    radial-gradient(ellipse at 80% 20%, #29214d 0%, transparent 40%),
-    radial-gradient(ellipse at 10% 80%, #123b42 0%, transparent 35%),
-    #080b12;
-}
-
-.cinematic .results-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 25px;
-  align-items: flex-end;
-  margin-bottom: 45px;
-}
-
-.cinematic .results-grid {
-  display: grid;
-  grid-template-columns: .8fr 1.2fr;
-  gap: 22px;
-}
-
-.cinematic .result-card {
-  background: linear-gradient(145deg, #151e2d, #0e1521);
-  border: 1px solid #ffffff18;
-  border-radius: 15px;
-  padding: 26px;
-  box-shadow: 0 20px 50px #0003;
-}
-
-.cinematic .score-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 280px;
-}
-
-.cinematic .score-ring {
-  width: 170px;
-  height: 170px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(var(--cyan) 0 87%, #ffffff13 87% 100%);
-  position: relative;
-  margin: 20px 0;
-  animation: scoreReveal 2s ease-out both;
-}
-
-.cinematic .score-ring::before {
-  content: "";
-  position: absolute;
-  inset: 11px;
-  border-radius: 50%;
-  background: #111a29;
-}
-
-.cinematic .score-value {
-  position: relative;
-  font-size: 47px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-}
-
-.cinematic .score-value small {
-  font-size: 17px;
-  color: var(--muted);
-}
-
-.cinematic .score-label {
-  color: var(--cyan);
-  font-size: 12px;
-  letter-spacing: 2px;
-  font-weight: 800;
-}
-
-.cinematic .skill-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-}
-
-.cinematic .skill-title {
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.cinematic .skill-tag {
-  display: inline-block;
-  margin: 0 6px 9px 0;
-  border-radius: 7px;
-  padding: 8px 11px;
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.cinematic .skill-tag.good {
-  background: #50e5dc15;
-  border: 1px solid #50e5dc35;
-  color: #75eee5;
-}
-
-.cinematic .skill-tag.missing {
-  background: #ffb86b12;
-  border: 1px solid #ffb86b35;
-  color: #ffc58b;
-}
-
-.cinematic .recommendation {
-  margin-top: 22px;
-  padding: 19px;
-  border-radius: 10px;
-  background: #9b83ff10;
-  border: 1px solid #9b83ff30;
-}
-
-.cinematic .recommendation h3 {
-  font-size: 14px;
-  color: #b6a4ff;
-  margin-bottom: 8px;
-}
-
-.cinematic .recommendation p {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.7;
-  margin: 0;
-}
-
-.cinematic .closing {
-  text-align: center;
-  margin-top: 65px;
-}
-
-.cinematic .closing h2 {
-  font-size: clamp(32px, 4.5vw, 54px);
-  letter-spacing: -2px;
-  margin-bottom: 16px;
-}
-
-.cinematic .closing p {
-  color: var(--muted);
-  line-height: 1.7;
-  margin-bottom: 25px;
-}
-
-.cinematic .reveal {
-  opacity: 0;
-  transform: translateY(35px);
-  transition: opacity .8s ease, transform .8s ease;
-}
-
-.cinematic .reveal.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.cinematic .page-indicator {
-  position: fixed;
-  right: 25px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 20;
-  display: grid;
-  gap: 12px;
-}
-
-.cinematic .page-indicator a {
-  width: 8px;
-  height: 8px;
-  border-radius: 20px;
-  background: #ffffff40;
-  transition: .3s;
-  cursor: pointer;
-}
-
-.cinematic .page-indicator a.active {
-  height: 28px;
-  background: var(--cyan);
-}
-
-@keyframes resumeFloat {
-  0%, 100% { transform: translateY(0) rotateY(-13deg) rotateX(5deg); }
-  50% { transform: translateY(-18px) rotateY(-8deg) rotateX(2deg); }
-}
-
-@keyframes chipFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-13px); }
-}
-
-@keyframes scan {
-  0% { top: 10px; opacity: 0; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { top: 95%; opacity: 0; }
-}
-
-@keyframes scoreReveal {
-  from { transform: rotate(-90deg) scale(.8); }
-  to { transform: rotate(0) scale(1); }
-}
-
-@media (max-width: 850px) {
-  .cinematic .scene { padding: 85px 6%; }
-  .cinematic .hero-grid,
-  .cinematic .analysis-grid,
-  .cinematic .results-grid {
-    grid-template-columns: 1fr;
-  }
-  .cinematic .hero-grid { gap: 25px; }
-  .cinematic .resume-stage { min-height: 390px; }
-  .cinematic .analysis-grid { gap: 30px; }
-  .cinematic .results-header { align-items: flex-start; flex-direction: column; }
-}
-
-@media (max-width: 550px) {
-  .cinematic .hero-title { letter-spacing: -2px; }
-  .cinematic .skill-columns { grid-template-columns: 1fr; }
-  .cinematic .page-indicator { right: 10px; }
-  .cinematic .scene { padding: 75px 22px; }
-  .cinematic .analysis-window { padding: 17px; }
-  .cinematic .resume-card { width: 250px; }
-}
-`;
+import React, { useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Float, Stars, Text } from "@react-three/drei";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
+import * as THREE from "three";
+import "./CinematicExperience.css";
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
+
+// =====================================
+// SMOOTH TRANSITION HELPER
+// =====================================
+
+const smoothRange = (value, start, end) => {
+    const t = THREE.MathUtils.clamp(
+        (value - start) / (end - start),
+        0,
+        1
+    );
+
+    return t * t * (3 - 2 * t);
+};
+
+// =====================================
+// RESUME DOCUMENT
+// =====================================
+
+function ResumeDocument() {
+    const resume = useRef();
+    const laser = useRef();
+    const { pointer } = useThree();
+
+    useFrame((state) => {
+        if (!resume.current) return;
+
+        resume.current.rotation.y = THREE.MathUtils.lerp(
+            resume.current.rotation.y,
+            pointer.x * 0.12 +
+                Math.sin(state.clock.elapsedTime * 0.4) * 0.05,
+            0.04
+        );
+
+        resume.current.rotation.x = THREE.MathUtils.lerp(
+            resume.current.rotation.x,
+            -pointer.y * 0.08,
+            0.04
+        );
+
+        if (laser.current) {
+            laser.current.position.y =
+                1.35 - ((state.clock.elapsedTime * 0.65) % 2.7);
+        }
+    });
+
+    return (
+        <Float speed={1.1} rotationIntensity={0.08} floatIntensity={0.25}>
+            <group ref={resume}>
+                <mesh position={[0, 0, -0.08]}>
+                    <boxGeometry args={[2.65, 3.65, 0.08]} />
+                    <meshBasicMaterial color="#a30e38" wireframe />
+                </mesh>
+
+                <mesh castShadow>
+                    <boxGeometry args={[2.45, 3.4, 0.09]} />
+                    <meshStandardMaterial
+                        color="#f5f0f0"
+                        roughness={0.72}
+                        metalness={0.04}
+                    />
+                </mesh>
+
+                <Text
+                    position={[-0.91, 1.3, 0.055]}
+                    fontSize={0.23}
+                    color="#8c102e"
+                    anchorX="left"
+                >
+                    RESUME
+                </Text>
+
+                <Text
+                    position={[-0.91, 1.02, 0.055]}
+                    fontSize={0.085}
+                    color="#29232a"
+                    anchorX="left"
+                >
+                    CAREER PROFILE
+                </Text>
+
+                <mesh position={[-0.77, 0.58, 0.06]}>
+                    <boxGeometry args={[0.32, 0.38, 0.015]} />
+                    <meshBasicMaterial color="#b9aeb2" />
+                </mesh>
+
+                <Text
+                    position={[-0.48, 0.7, 0.06]}
+                    fontSize={0.095}
+                    color="#262027"
+                    anchorX="left"
+                >
+                    PROFESSIONAL
+                </Text>
+
+                <Text
+                    position={[-0.48, 0.53, 0.06]}
+                    fontSize={0.075}
+                    color="#777078"
+                    anchorX="left"
+                >
+                    Software Developer
+                </Text>
+
+                {[
+                    { y: 0.12, title: "EXPERIENCE" },
+                    { y: -0.72, title: "EDUCATION" },
+                    { y: -1.28, title: "SKILLS" }
+                ].map((section, index) => (
+                    <group key={section.title}>
+                        <Text
+                            position={[-0.92, section.y, 0.06]}
+                            fontSize={0.095}
+                            color="#8c102e"
+                            anchorX="left"
+                        >
+                            {section.title}
+                        </Text>
+
+                        {[0, 1, 2]
+                            .slice(0, index === 2 ? 2 : 3)
+                            .map((line) => (
+                                <mesh
+                                    key={line}
+                                    position={[
+                                        -0.43,
+                                        section.y - 0.2 - line * 0.13,
+                                        0.06
+                                    ]}
+                                >
+                                    <boxGeometry
+                                        args={[
+                                            1.35 - line * 0.12,
+                                            0.025,
+                                            0.01
+                                        ]}
+                                    />
+                                    <meshBasicMaterial color="#aaa1a5" />
+                                </mesh>
+                            ))}
+                    </group>
+                ))}
+
+                <mesh ref={laser} position={[0, 1.35, 0.11]}>
+                    <boxGeometry args={[2.48, 0.025, 0.025]} />
+                    <meshBasicMaterial
+                        color="#ff1748"
+                        toneMapped={false}
+                    />
+                </mesh>
+
+                <mesh position={[0, 0, 0.1]}>
+                    <planeGeometry args={[2.48, 3.4]} />
+                    <meshBasicMaterial
+                        color="#ff1748"
+                        transparent
+                        opacity={0.025}
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+            </group>
+        </Float>
+    );
+}
+
+// =====================================
+// AI SCANNER
+// =====================================
+
+function ScannerObject() {
+    const scanner = useRef();
+    const innerRing = useRef();
+
+    useFrame((state) => {
+        if (scanner.current) {
+            scanner.current.rotation.y =
+                state.clock.elapsedTime * 0.18;
+
+            scanner.current.rotation.x =
+                Math.sin(state.clock.elapsedTime * 0.35) * 0.12;
+        }
+
+        if (innerRing.current) {
+            innerRing.current.rotation.z =
+                -state.clock.elapsedTime * 0.35;
+        }
+    });
+
+    return (
+        <group ref={scanner}>
+            <mesh>
+                <torusGeometry args={[1.25, 0.018, 12, 100]} />
+                <meshBasicMaterial color="#ff315d" />
+            </mesh>
+
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[0.92, 0.012, 12, 100]} />
+                <meshBasicMaterial
+                    color="#9d1640"
+                    transparent
+                    opacity={0.8}
+                />
+            </mesh>
+
+            <mesh ref={innerRing} rotation={[0.8, 0.3, 0]}>
+                <torusGeometry args={[0.62, 0.025, 12, 100]} />
+                <meshBasicMaterial color="#ff6685" />
+            </mesh>
+
+            <mesh>
+                <sphereGeometry args={[0.38, 32, 32]} />
+                <meshStandardMaterial
+                    color="#5c0b25"
+                    emissive="#d10e43"
+                    emissiveIntensity={1.8}
+                    metalness={0.65}
+                    roughness={0.25}
+                />
+            </mesh>
+
+            <Text
+                position={[0, 1.75, 0]}
+                fontSize={0.18}
+                color="#ff829b"
+                anchorX="center"
+            >
+                AI RESUME SCAN
+            </Text>
+
+            {[
+                { text: "SKILLS DETECTED", x: -1.75, y: 0.75 },
+                { text: "ATS MATCH", x: 1.7, y: 0.55 },
+                { text: "EXPERIENCE", x: -1.65, y: -0.8 },
+                { text: "KEYWORDS", x: 1.65, y: -0.85 }
+            ].map((item) => (
+                <group key={item.text} position={[item.x, item.y, 0]}>
+                    <mesh>
+                        <boxGeometry args={[1.05, 0.25, 0.035]} />
+                        <meshBasicMaterial
+                            color="#5b1029"
+                            transparent
+                            opacity={0.85}
+                        />
+                    </mesh>
+
+                    <Text
+                        position={[0, 0, 0.025]}
+                        fontSize={0.075}
+                        color="#ffdce5"
+                        anchorX="center"
+                    >
+                        {item.text}
+                    </Text>
+                </group>
+            ))}
+        </group>
+    );
+}
+
+// =====================================
+// ANALYTICS DASHBOARD
+// =====================================
+
+function AnalyticsObject() {
+    const dashboard = useRef();
+
+    useFrame((state) => {
+        if (dashboard.current) {
+            dashboard.current.rotation.y =
+                Math.sin(state.clock.elapsedTime * 0.35) * 0.08;
+
+            dashboard.current.rotation.x =
+                Math.sin(state.clock.elapsedTime * 0.25) * 0.025;
+        }
+    });
+
+    return (
+        <group ref={dashboard}>
+            <mesh>
+                <boxGeometry args={[3.25, 2.55, 0.12]} />
+                <meshStandardMaterial
+                    color="#180912"
+                    metalness={0.6}
+                    roughness={0.28}
+                    transparent
+                    opacity={0.94}
+                />
+            </mesh>
+
+            <mesh position={[0, 0, 0.07]}>
+                <planeGeometry args={[3.1, 2.4]} />
+                <meshBasicMaterial color="#210b16" />
+            </mesh>
+
+            <Text
+                position={[-1.35, 1.02, 0.09]}
+                fontSize={0.14}
+                color="#ffdce5"
+                anchorX="left"
+            >
+                RESUME ANALYTICS
+            </Text>
+
+            <mesh position={[-0.8, 0.25, 0.12]}>
+                <torusGeometry args={[0.43, 0.055, 16, 80]} />
+                <meshBasicMaterial color="#a21a43" />
+            </mesh>
+
+            <mesh
+                position={[-0.8, 0.25, 0.13]}
+                rotation={[0, 0, Math.PI * 0.35]}
+            >
+                <torusGeometry
+                    args={[0.43, 0.055, 16, 80, Math.PI * 1.45]}
+                />
+                <meshBasicMaterial color="#ff426c" />
+            </mesh>
+
+            <Text
+                position={[-0.8, 0.25, 0.2]}
+                fontSize={0.27}
+                color="#ffffff"
+                anchorX="center"
+            >
+                86%
+            </Text>
+
+            <Text
+                position={[-0.8, -0.28, 0.12]}
+                fontSize={0.085}
+                color="#e6a9ba"
+                anchorX="center"
+            >
+                ATS SCORE
+            </Text>
+
+            <Text
+                position={[0.05, 0.65, 0.13]}
+                fontSize={0.105}
+                color="#ffdce5"
+                anchorX="left"
+            >
+                SKILL MATCH
+            </Text>
+
+            {[
+                { y: 0.35, width: 1.15, label: "Python" },
+                { y: 0.02, width: 0.9, label: "React" },
+                { y: -0.31, width: 0.72, label: "SQL" }
+            ].map((item) => (
+                <group key={item.label}>
+                    <Text
+                        position={[0.05, item.y + 0.09, 0.14]}
+                        fontSize={0.07}
+                        color="#d8bac5"
+                        anchorX="left"
+                    >
+                        {item.label}
+                    </Text>
+
+                    <mesh position={[0.55, item.y - 0.05, 0.14]}>
+                        <boxGeometry args={[1.12, 0.055, 0.02]} />
+                        <meshBasicMaterial color="#4b2634" />
+                    </mesh>
+
+                    <mesh
+                        position={[
+                            0.55 - (1.12 - item.width) / 2,
+                            item.y - 0.05,
+                            0.16
+                        ]}
+                    >
+                        <boxGeometry args={[item.width, 0.055, 0.025]} />
+                        <meshBasicMaterial color="#ff426c" />
+                    </mesh>
+                </group>
+            ))}
+
+            <Text
+                position={[-1.32, -0.95, 0.13]}
+                fontSize={0.075}
+                color="#ff829b"
+                anchorX="left"
+            >
+                MATCHED SKILLS  •  MISSING SKILLS  •  INSIGHTS
+            </Text>
+        </group>
+    );
+}
+
+// =====================================
+// INTELLIGENCE CORE
+// =====================================
+
+function IntelligenceCore() {
+    const core = useRef();
+    const ringOne = useRef();
+    const ringTwo = useRef();
+
+    useFrame((state) => {
+        if (core.current) {
+            core.current.rotation.y = state.clock.elapsedTime * 0.25;
+
+            core.current.rotation.x =
+                Math.sin(state.clock.elapsedTime * 0.4) * 0.12;
+        }
+
+        if (ringOne.current) {
+            ringOne.current.rotation.x =
+                state.clock.elapsedTime * 0.3;
+
+            ringOne.current.rotation.y =
+                state.clock.elapsedTime * 0.2;
+        }
+
+        if (ringTwo.current) {
+            ringTwo.current.rotation.y =
+                -state.clock.elapsedTime * 0.35;
+
+            ringTwo.current.rotation.x = 1.1;
+        }
+    });
+
+    return (
+        <group>
+            <group ref={core}>
+                <mesh>
+                    <icosahedronGeometry args={[0.72, 3]} />
+                    <meshStandardMaterial
+                        color="#9e123c"
+                        emissive="#e4144b"
+                        emissiveIntensity={1.5}
+                        metalness={0.8}
+                        roughness={0.2}
+                        wireframe
+                    />
+                </mesh>
+
+                <mesh>
+                    <sphereGeometry args={[0.42, 32, 32]} />
+                    <meshStandardMaterial
+                        color="#f52d60"
+                        emissive="#ff1748"
+                        emissiveIntensity={2.5}
+                        metalness={0.5}
+                        roughness={0.18}
+                    />
+                </mesh>
+            </group>
+
+            <mesh ref={ringOne}>
+                <torusGeometry args={[1.12, 0.018, 12, 100]} />
+                <meshBasicMaterial color="#ff426c" />
+            </mesh>
+
+            <mesh ref={ringTwo}>
+                <torusGeometry args={[1.42, 0.012, 12, 100]} />
+                <meshBasicMaterial
+                    color="#a90e3d"
+                    transparent
+                    opacity={0.8}
+                />
+            </mesh>
+
+            <Text
+                position={[0, -1.9, 0]}
+                fontSize={0.16}
+                color="#ff829b"
+                anchorX="center"
+            >
+                INTELLIGENCE FOR YOUR CAREER
+            </Text>
+        </group>
+    );
+}
+
+// =====================================
+// PARTICLE FIELD
+// =====================================
+
+function ParticleField() {
+    const particles = useRef();
+
+    const positions = React.useMemo(() => {
+        const values = new Float32Array(450 * 3);
+
+        for (let i = 0; i < 450; i++) {
+            values[i * 3] = (Math.random() - 0.5) * 13;
+            values[i * 3 + 1] = (Math.random() - 0.5) * 10;
+            values[i * 3 + 2] = (Math.random() - 0.5) * 8;
+        }
+
+        return values;
+    }, []);
+
+    useFrame((state, delta) => {
+        if (particles.current) {
+            particles.current.rotation.y += delta * 0.012;
+            particles.current.rotation.x += delta * 0.004;
+        }
+    });
+
+    return (
+        <points ref={particles}>
+            <bufferGeometry>
+                <bufferAttribute
+                    attach="attributes-position"
+                    count={positions.length / 3}
+                    array={positions}
+                    itemSize={3}
+                />
+            </bufferGeometry>
+
+            <pointsMaterial
+                color="#ff355d"
+                size={0.025}
+                transparent
+                opacity={0.7}
+                sizeAttenuation
+            />
+        </points>
+    );
+}
+
+// =====================================
+// SCROLL-DRIVEN 3D OBJECT TRANSITIONS
+// =====================================
+
+function SceneObjects({ progress }) {
+    const resume = useRef();
+    const scanner = useRef();
+    const analytics = useRef();
+    const intelligence = useRef();
+
+    useFrame(() => {
+        const p = THREE.MathUtils.clamp(progress.current, 0, 1);
+
+        const resumeOut = smoothRange(p, 0.20, 0.36);
+
+        const scannerIn = smoothRange(p, 0.25, 0.42);
+        const scannerOut = smoothRange(p, 0.58, 0.75);
+
+        const finalIn = smoothRange(p, 0.65, 0.82);
+
+        const resumeVisibility = 1 - resumeOut;
+        const scannerVisibility = scannerIn * (1 - scannerOut);
+        const finalVisibility = finalIn;
+
+        const updateObject = (
+            ref,
+            visibility,
+            x,
+            y,
+            z,
+            moveX = 0
+        ) => {
+            if (!ref.current) return;
+
+            ref.current.visible = visibility > 0.001;
+
+            ref.current.scale.setScalar(
+                Math.max(0.0001, visibility)
+            );
+
+            ref.current.position.set(
+                x + moveX,
+                y,
+                z
+            );
+        };
+
+        // Resume moves out
+        updateObject(
+            resume,
+            resumeVisibility,
+            1.5,
+            0,
+            0,
+            resumeOut * 3
+        );
+
+        // Scanner moves in
+        updateObject(
+            scanner,
+            scannerVisibility,
+            1.5,
+            0,
+            0,
+            (1 - scannerIn) * 3 - scannerOut * 3
+        );
+
+        // Analytics dashboard moves in
+        updateObject(
+            analytics,
+            finalVisibility,
+            0.4,
+            0,
+            0,
+            (1 - finalIn) * 3
+        );
+
+        // Intelligence core moves in
+        updateObject(
+            intelligence,
+            finalVisibility,
+            2.5,
+            0,
+            -0.5,
+            (1 - finalIn) * 3
+        );
+    });
+
+    return (
+        <>
+            <group ref={resume}>
+                <ResumeDocument />
+            </group>
+
+            <group ref={scanner}>
+                <Float speed={1.2} floatIntensity={0.2}>
+                    <ScannerObject />
+                </Float>
+            </group>
+
+            <group ref={analytics}>
+                <Float speed={1} floatIntensity={0.15}>
+                    <AnalyticsObject />
+                </Float>
+            </group>
+
+            <group ref={intelligence}>
+                <Float speed={1.4} floatIntensity={0.25}>
+                    <IntelligenceCore />
+                </Float>
+            </group>
+        </>
+    );
+}
+
+// =====================================
+// MAIN 3D SCENE
+// =====================================
+
+function CinematicScene({ progress }) {
+    return (
+        <>
+            <color attach="background" args={["#080508"]} />
+            <fog attach="fog" args={["#080508", 10, 22]} />
+
+            <ambientLight intensity={1.1} />
+
+            <pointLight
+                position={[4, 3, 5]}
+                intensity={55}
+                color="#ff1748"
+            />
+
+            <pointLight
+                position={[-4, -2, 3]}
+                intensity={35}
+                color="#79001e"
+            />
+
+            <spotLight
+                position={[0, 5, 5]}
+                angle={0.5}
+                intensity={35}
+                color="#ffffff"
+            />
+
+            <SceneObjects progress={progress} />
+            <ParticleField />
+
+            <Stars
+                radius={90}
+                depth={50}
+                count={1200}
+                factor={3}
+                fade
+                speed={0.3}
+            />
+        </>
+    );
+}
+
+// =====================================
+// MAIN CINEMATIC EXPERIENCE
+// =====================================
 
 export default function CinematicExperience() {
-  const rootRef = useRef(null);
+    const container = useRef();
+    const progress = useRef(0);
 
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+    const heroText = useRef();
+    const secondText = useRef();
+    const thirdText = useRef();
 
-    const elements = root.querySelectorAll(".reveal");
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-          }
+    useGSAP(() => {
+        gsap.set(heroText.current, {
+            opacity: 1,
+            y: 0
         });
-      },
-      { threshold: 0.15 }
-    );
 
-    elements.forEach((element) => observer.observe(element));
-
-    const sections = root.querySelectorAll(".scene");
-    const links = root.querySelectorAll(".page-indicator a");
-
-    const sectionObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = Array.from(sections).indexOf(entry.target);
-            links.forEach((link, i) => {
-              link.classList.toggle("active", i === index);
-            });
-          }
+        gsap.set(secondText.current, {
+            opacity: 0,
+            y: 75
         });
-      },
-      { threshold: 0.5 }
+
+        gsap.set(thirdText.current, {
+            opacity: 0,
+            y: 75
+        });
+
+        const timeline = gsap.timeline({
+            scrollTrigger: {
+                trigger: container.current,
+                start: "top top",
+                end: () => "+=" + window.innerHeight * 2,
+                scrub: 1,
+                invalidateOnRefresh: true,
+
+                onRefresh: (self) => {
+                    progress.current = self.progress;
+                }
+            }
+        });
+
+        timeline.to(
+            heroText.current,
+            {
+                opacity: 0,
+                y: -65,
+                duration: 0.35,
+                ease: "power2.inOut"
+            },
+            0.82
+        );
+
+        timeline.to(
+            secondText.current,
+            {
+                opacity: 1,
+                y: 0,
+                duration: 0.35,
+                ease: "power2.inOut"
+            },
+            0.97
+        );
+
+        timeline.to(
+            secondText.current,
+            {
+                opacity: 0,
+                y: -65,
+                duration: 0.35,
+                ease: "power2.inOut"
+            },
+            1.82
+        );
+
+        timeline.to(
+            thirdText.current,
+            {
+                opacity: 1,
+                y: 0,
+                duration: 0.35,
+                ease: "power2.inOut"
+            },
+            1.97
+        );
+
+        timeline.to(
+            {},
+            {
+                duration: 0.68
+            },
+            2.32
+        );
+
+        // Keep 3D movement synchronized with text scroll
+        timeline.eventCallback("onUpdate", () => {
+            progress.current = timeline.progress();
+        });
+
+        progress.current = timeline.progress();
+
+        ScrollTrigger.refresh();
+
+        return () => {
+            timeline.scrollTrigger?.kill();
+            timeline.kill();
+        };
+
+    }, { scope: container });
+
+    return (
+        <div className="cinematic-container" ref={container}>
+
+            {/* 3D CANVAS */}
+
+            <div className="cinematic-canvas">
+                <Canvas
+                    camera={{
+                        position: [0, 0, 7],
+                        fov: 42
+                    }}
+                    dpr={[1, 1.5]}
+                    gl={{
+                        antialias: true,
+                        alpha: true
+                    }}
+                >
+                    <CinematicScene progress={progress} />
+                </Canvas>
+            </div>
+
+            {/* BACKGROUND */}
+
+            <div className="cinematic-experience-background">
+                <div className="cinematic-red-glow" />
+                <div className="cinematic-red-glow cinematic-red-glow-two" />
+            </div>
+
+            {/* FIRST SECTION */}
+
+            <section className="cinematic-section">
+                <div
+                    className="cinematic-content"
+                    ref={heroText}
+                >
+                    <p className="cinematic-label">
+                        <span />
+                        THE FUTURE OF CAREER INTELLIGENCE
+                    </p>
+
+                    <h1>
+                        YOUR CAREER.
+                        <br />
+                        <span>REIMAGINED.</span>
+                    </h1>
+
+                    <p className="cinematic-description">
+                        Your experience deserves more than a simple resume.
+                        Discover the power of intelligent career analysis.
+                    </p>
+
+                    <a
+                        href="#resume-workspace"
+                        className="cinematic-cta"
+                    >
+                        EXPLORE THE EXPERIENCE
+                        <span>↗</span>
+                    </a>
+
+                    <div className="scroll-indicator">
+                        <span>SCROLL TO EXPLORE</span>
+                        <div />
+                    </div>
+                </div>
+            </section>
+
+            {/* SECOND SECTION */}
+
+            <section className="cinematic-section">
+                <div
+                    className="cinematic-content cinematic-hidden"
+                    ref={secondText}
+                >
+                    <p className="cinematic-label">
+                        <span />
+                        INTELLIGENCE IN EVERY DETAIL
+                    </p>
+
+                    <h2>
+                        YOUR RESUME.
+                        <br />
+                        <span>UNDER THE LENS.</span>
+                    </h2>
+
+                    <p className="cinematic-description">
+                        Every skill. Every achievement. Every opportunity.
+                        Our analyzer examines your resume and reveals
+                        where you can improve.
+                    </p>
+                </div>
+            </section>
+
+            {/* THIRD SECTION */}
+
+            <section className="cinematic-section">
+                <div
+                    className="cinematic-content cinematic-hidden"
+                    ref={thirdText}
+                >
+                    <p className="cinematic-label">
+                        <span />
+                        TURN POTENTIAL INTO PROGRESS
+                    </p>
+
+                    <h2>
+                        STAND OUT.
+                        <br />
+                        <span>GET HIRED.</span>
+                    </h2>
+
+                    <p className="cinematic-description">
+                        Understand your ATS score, discover skill gaps,
+                        explore your strengths and take the next step
+                        in your career.
+                    </p>
+
+                    <a
+                        href="#resume-workspace"
+                        className="cinematic-cta"
+                    >
+                        START YOUR ANALYSIS
+                        <span>↗</span>
+                    </a>
+                </div>
+            </section>
+
+        </div>
     );
-
-    sections.forEach((section) => sectionObserver.observe(section));
-
-    return () => {
-      observer.disconnect();
-      sectionObserver.disconnect();
-    };
-  }, []);
-
-  const scrollToSection = (id) => {
-    rootRef.current?.querySelector(`#${id}`)?.scrollIntoView({
-      behavior: "smooth"
-    });
-  };
-
-  return (
-    <div className="cinematic" ref={rootRef}>
-      <style>{styles}</style>
-
-      <nav className="page-indicator" aria-label="Page navigation">
-        <a className="active" aria-label="Introduction"
-          onClick={() => scrollToSection("cinematic-intro")} />
-        <a aria-label="AI analysis"
-          onClick={() => scrollToSection("cinematic-analysis")} />
-        <a aria-label="Results"
-          onClick={() => scrollToSection("cinematic-results")} />
-      </nav>
-
-      {/* PAGE 1: INTRODUCTION */}
-
-      <section className="scene scene-one" id="cinematic-intro">
-        <div className="orb" />
-
-        <div className="scene-inner hero-grid">
-          <div className="reveal">
-            <div className="eyebrow">The future of resume intelligence</div>
-
-            <h1 className="hero-title">
-              Your career.
-              <br />
-              <span className="gradient-text">Decoded.</span>
-            </h1>
-
-            <p className="hero-description">
-              Your resume is more than a document. It is your professional
-              story. Discover how intelligent analysis can help you make
-              every opportunity count.
-            </p>
-
-            <div className="hero-actions">
-              <button
-                className="primary-button"
-                onClick={() => scrollToSection("cinematic-analysis")}
-              >
-                Explore the experience →
-              </button>
-
-              <button
-                className="secondary-button"
-                onClick={() => scrollToSection("cinematic-results")}
-              >
-                See the results
-              </button>
-            </div>
-
-            <div className="hero-note">
-              INTELLIGENT ANALYSIS · SKILL MATCHING · CAREER INSIGHTS
-            </div>
-          </div>
-
-          <div className="resume-stage reveal">
-            <div className="orb" />
-
-            <div className="resume-card">
-              <div className="resume-heading">YOUR NAME</div>
-              <div className="resume-sub">SOFTWARE PROFESSIONAL</div>
-
-              <div className="resume-section">PROFILE</div>
-              <div className="resume-line" />
-              <div className="resume-line medium" />
-              <div className="resume-line short" />
-
-              <div className="resume-section">EXPERIENCE</div>
-              <div className="resume-line" />
-              <div className="resume-line medium" />
-              <div className="resume-line" />
-
-              <div className="resume-section">TECHNICAL SKILLS</div>
-              <div className="resume-line medium" />
-              <div className="resume-line short" />
-            </div>
-
-            <div className="floating-chip chip-one">
-              ✦ AI Resume Intelligence
-            </div>
-
-            <div className="floating-chip chip-two">
-              ✓ Profile detected
-            </div>
-          </div>
-        </div>
-
-        <div className="scroll-cue">Scroll to explore ↓</div>
-      </section>
-
-      {/* PAGE 2: AI ANALYSIS */}
-
-      <section className="scene scene-two" id="cinematic-analysis">
-        <div className="scene-inner">
-          <div className="reveal">
-            <div className="eyebrow">Behind the intelligence</div>
-
-            <h2 className="section-title">
-              Every detail matters.
-              <br />
-              <span className="gradient-text">Every skill counts.</span>
-            </h2>
-
-            <p className="section-description">
-              Transform an ordinary resume into meaningful career insights.
-              Our analysis experience examines your professional profile
-              and compares it with your target job description.
-            </p>
-          </div>
-
-          <div className="analysis-grid">
-            <div className="analysis-window reveal">
-              <div className="window-top">
-                <span>RESUME ANALYSIS ENGINE</span>
-                <div className="window-dots">
-                  <span /><span /><span />
-                </div>
-              </div>
-
-              <div className="document-preview">
-                <div className="scan-line" />
-
-                <div className="resume-heading">Professional Profile</div>
-                <div className="resume-line" />
-                <div className="resume-line medium" />
-                <div className="resume-line short" />
-
-                <div className="resume-section">WORK EXPERIENCE</div>
-                <div className="resume-line" />
-                <div className="resume-line medium" />
-                <div className="resume-line" />
-
-                <div className="resume-section">TECHNICAL SKILLS</div>
-                <div className="resume-line medium" />
-                <div className="resume-line short" />
-              </div>
-
-              <div className="detected">
-                <span>Skills identified</span>
-                <strong>✓ Detected</strong>
-              </div>
-              <div className="detected">
-                <span>Job description comparison</span>
-                <strong>✓ Compared</strong>
-              </div>
-              <div className="detected">
-                <span>Improvement opportunities</span>
-                <strong>✓ Generated</strong>
-              </div>
-            </div>
-
-            <div className="analysis-features reveal">
-              <div className="feature">
-                <div className="feature-icon">⌕</div>
-                <div>
-                  <h3>Intelligent text analysis</h3>
-                  <p>
-                    Extract meaningful information from PDF and DOCX
-                    resumes to understand a candidate's profile.
-                  </p>
-                </div>
-              </div>
-
-              <div className="feature">
-                <div className="feature-icon">◈</div>
-                <div>
-                  <h3>Skill matching</h3>
-                  <p>
-                    Compare resume content against job requirements
-                    to identify matched and missing skills.
-                  </p>
-                </div>
-              </div>
-
-              <div className="feature">
-                <div className="feature-icon">✧</div>
-                <div>
-                  <h3>Actionable recommendations</h3>
-                  <p>
-                    Highlight areas that candidates can improve
-                    to make their resumes more relevant.
-                  </p>
-                </div>
-              </div>
-
-              <div className="feature">
-                <div className="feature-icon">▥</div>
-                <div>
-                  <h3>Data-driven insights</h3>
-                  <p>
-                    Present analysis results through scores,
-                    dashboards and historical reports.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PAGE 3: RESULTS */}
-
-      <section className="scene scene-three" id="cinematic-results">
-        <div className="scene-inner">
-          <div className="results-header reveal">
-            <div>
-              <div className="eyebrow">The result of intelligence</div>
-
-              <h2 className="section-title">
-                From information
-                <br />
-                to <span className="gradient-text">opportunity.</span>
-              </h2>
-
-              <p className="section-description">
-                A clear view of where your resume stands and
-                what you can improve next.
-              </p>
-            </div>
-          </div>
-
-          <div className="results-grid">
-            <div className="result-card score-card reveal">
-              <div className="muted">ILLUSTRATIVE ATS MATCH SCORE</div>
-
-              <div className="score-ring">
-                <div className="score-value">
-                  87<small>%</small>
-                </div>
-              </div>
-
-              <div className="score-label">STRONG MATCH</div>
-              <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
-                Example analysis visualization
-              </p>
-            </div>
-
-            <div className="result-card reveal">
-              <div className="skill-columns">
-                <div>
-                  <h3 className="skill-title">
-                    <span style={{ color: "#75eee5" }}>✓</span> Matched skills
-                  </h3>
-
-                  {["Python", "React", "SQL", "FastAPI", "Git", "Data Analysis"].map(
-                    (skill) => (
-                      <span className="skill-tag good" key={skill}>
-                        {skill}
-                      </span>
-                    )
-                  )}
-                </div>
-
-                <div>
-                  <h3 className="skill-title">
-                    <span style={{ color: "#ffc58b" }}>＋</span> Skills to improve
-                  </h3>
-
-                  {["Docker", "AWS", "Testing", "Kubernetes"].map(
-                    (skill) => (
-                      <span className="skill-tag missing" key={skill}>
-                        {skill}
-                      </span>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div className="recommendation">
-                <h3>✧ Improvement insight</h3>
-                <p>
-                  Consider adding relevant project experience,
-                  measurable achievements and evidence of the
-                  technical skills required by your target role.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="closing reveal">
-            <h2>
-              Build a stronger
-              <span className="gradient-text"> professional story.</span>
-            </h2>
-
-            <p>
-              Understand your strengths. Discover opportunities.
-              Take the next step in your career.
-            </p>
-
-            <button
-              className="primary-button"
-              onClick={() => scrollToSection("cinematic-intro")}
-            >
-              Explore again ↑
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
 }

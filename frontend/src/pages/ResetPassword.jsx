@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { API_URL } from "../config";
+import { JAVA_API_URL } from "../config";
 
 function ResetPassword({ onBack }) {
   const [password, setPassword] = useState("");
@@ -38,7 +38,7 @@ function ResetPassword({ onBack }) {
 
     try {
       const response = await fetch(
-        `${API_URL}/auth/reset-password`,
+        `${JAVA_API_URL}/auth/reset-password`,
         {
           method: "POST",
           headers: {
@@ -51,11 +51,13 @@ function ResetPassword({ onBack }) {
         }
       );
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
-          data.detail || "Password reset failed."
+          data.message ||
+          data.detail ||
+          "Password reset failed."
         );
       }
 
@@ -69,7 +71,7 @@ function ResetPassword({ onBack }) {
     } catch (err) {
       setError(
         err instanceof TypeError
-          ? "Cannot connect to the server. Please try again."
+          ? "Cannot connect to the Java server. Please try again."
           : err.message
       );
     } finally {
@@ -110,7 +112,6 @@ function ResetPassword({ onBack }) {
         </div>
 
         <div className="auth-form-panel">
-
           <div className="auth-form-container">
 
             <div className="auth-form-heading">
@@ -196,7 +197,6 @@ function ResetPassword({ onBack }) {
             </button>
 
           </div>
-
         </div>
 
       </div>

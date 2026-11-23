@@ -6547,3 +6547,31 @@ button:not(.hero-primary):not(.hero-secondary):not(.analyze-another-button):hove
 .auth-page .auth-form-card button:disabled {
     cursor: not-allowed !important;
 }
+/* Fix password input background and text visibility */
+.cp-input-wrap input {
+    background-color: #151b2b !important;
+    color: #ffffff !important;
+    caret-color: #ffffff;
+    border: 1px solid #39445a;
+}
+
+.cp-input-wrap input::placeholder {
+    color: #929bad !important;
+    opacity: 1;
+}
+
+.cp-input-wrap input:focus {
+    background-color: #151b2b !important;
+    color: #ffffff !important;
+    outline: none;
+    border-color: #7c8cff;
+}
+
+/* Fix browser autofill white background */
+.cp-input-wrap input:-webkit-autofill,
+.cp-input-wrap input:-webkit-autofill:hover,
+.cp-input-wrap input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #ffffff !important;
+    -webkit-box-shadow: 0 0 0 1000px #151b2b inset !important;
+    transition: background-color 9999s ease-in-out 0s;
+}

@@ -1,15 +1,17 @@
 
 package resume_analyzer.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.net.URLEncoder;
+import java.util.Properties;
+
 import org.springframework.stereotype.Service;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
 import jakarta.mail.internet.MimeMessage;
-
-import java.nio.charset.StandardCharsets;
-import java.net.URLEncoder;
-import java.util.Properties;
 
 @Service
 public class EmailService {
@@ -26,16 +28,32 @@ public class EmailService {
         String password = System.getenv("SMTP_PASSWORD");
         frontendUrl = System.getenv("FRONTEND_URL");
 
-        if (host == null || host.isBlank()
-                || port == null || port.isBlank()
-                || senderEmail == null || senderEmail.isBlank()
-                || password == null || password.isBlank()
-                || frontendUrl == null || frontendUrl.isBlank()) {
+        List<String> missing = new ArrayList<>();
 
+        if (host == null || host.isBlank()) {
+            missing.add("SMTP_HOST");
+        }
+
+        if (port == null || port.isBlank()) {
+            missing.add("SMTP_PORT");
+        }
+
+        if (senderEmail == null || senderEmail.isBlank()) {
+            missing.add("SMTP_EMAIL");
+        }
+
+        if (password == null || password.isBlank()) {
+            missing.add("SMTP_PASSWORD");
+        }
+
+        if (frontendUrl == null || frontendUrl.isBlank()) {
+            missing.add("FRONTEND_URL");
+        }
+
+        if (!missing.isEmpty()) {
             throw new IllegalStateException(
-                "Missing required Render environment variables: "
-                + "SMTP_HOST, SMTP_PORT, SMTP_EMAIL, "
-                + "SMTP_PASSWORD, FRONTEND_URL"
+                "Missing or empty environment variables: "
+                + String.join(", ", missing)
             );
         }
 
@@ -50,7 +68,6 @@ public class EmailService {
         }
 
         mailSender = new JavaMailSenderImpl();
-
         mailSender.setHost(host);
         mailSender.setPort(smtpPort);
         mailSender.setUsername(senderEmail);
@@ -123,11 +140,9 @@ public class EmailService {
                     """.formatted(safeName, resetLink);
 
             helper.setText(html, true);
-
             mailSender.send(message);
 
         } catch (Exception exception) {
-
             throw new RuntimeException(
                     "Could not send password reset email.",
                     exception

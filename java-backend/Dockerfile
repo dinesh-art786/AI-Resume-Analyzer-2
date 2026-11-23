@@ -6,7 +6,12 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-RUN mvn -B -DskipTests package
+RUN for attempt in 1 2 3 4 5; do \
+    mvn -B -Dmaven.wagon.http.retryHandler.count=5 -DskipTests package && exit 0; \
+    echo "Maven download failed. Retrying in 30 seconds..."; \
+    sleep 30; \
+    done; \
+    exit 1
 
 FROM eclipse-temurin:25-jre
 

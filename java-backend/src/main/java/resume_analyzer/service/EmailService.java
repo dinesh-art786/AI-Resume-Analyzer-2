@@ -1,8 +1,6 @@
 
 package resume_analyzer.service;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 import org.springframework.stereotype.Service;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -22,28 +20,39 @@ public class EmailService {
 
     public EmailService() {
 
-        Dotenv dotenv = Dotenv.configure()
-                .directory("../backend")
-                .ignoreIfMissing()
-                .load();
+        String host = System.getenv("SMTP_HOST");
+        String port = System.getenv("SMTP_PORT");
+        senderEmail = System.getenv("SMTP_EMAIL");
+        String password = System.getenv("SMTP_PASSWORD");
+        frontendUrl = System.getenv("FRONTEND_URL");
 
-        String host = dotenv.get("SMTP_HOST");
-        String port = dotenv.get("SMTP_PORT");
-        senderEmail = dotenv.get("SMTP_EMAIL");
-        String password = dotenv.get("SMTP_PASSWORD");
-        frontendUrl = dotenv.get("FRONTEND_URL");
+        if (host == null || host.isBlank()
+                || port == null || port.isBlank()
+                || senderEmail == null || senderEmail.isBlank()
+                || password == null || password.isBlank()
+                || frontendUrl == null || frontendUrl.isBlank()) {
 
-        if (host == null || port == null
-                || senderEmail == null || password == null
-                || frontendUrl == null) {
             throw new IllegalStateException(
-                    "Missing SMTP configuration in backend/.env"
+                "Missing required Render environment variables: "
+                + "SMTP_HOST, SMTP_PORT, SMTP_EMAIL, "
+                + "SMTP_PASSWORD, FRONTEND_URL"
+            );
+        }
+
+        int smtpPort;
+
+        try {
+            smtpPort = Integer.parseInt(port);
+        } catch (NumberFormatException exception) {
+            throw new IllegalStateException(
+                "SMTP_PORT must be a valid number.", exception
             );
         }
 
         mailSender = new JavaMailSenderImpl();
+
         mailSender.setHost(host);
-        mailSender.setPort(Integer.parseInt(port));
+        mailSender.setPort(smtpPort);
         mailSender.setUsername(senderEmail);
         mailSender.setPassword(password);
         mailSender.setDefaultEncoding("UTF-8");
@@ -64,6 +73,7 @@ public class EmailService {
             String token) {
 
         try {
+
             String resetLink = frontendUrl.replaceAll("/+$", "")
                     + "/reset-password?token="
                     + URLEncoder.encode(token, StandardCharsets.UTF_8);
@@ -117,6 +127,7 @@ public class EmailService {
             mailSender.send(message);
 
         } catch (Exception exception) {
+
             throw new RuntimeException(
                     "Could not send password reset email.",
                     exception

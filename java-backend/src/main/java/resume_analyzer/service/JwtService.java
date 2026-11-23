@@ -1,7 +1,6 @@
 
 package resume_analyzer.service;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -23,20 +22,12 @@ public class JwtService {
 
     public JwtService() {
 
-        Dotenv dotenv = Dotenv.configure()
-                .directory("../backend")
-                .ignoreIfMissing()
-                .load();
-
-        String secret = dotenv.get("SECRET_KEY");
-
-        if (secret == null || secret.isBlank()) {
-            secret = System.getenv("SECRET_KEY");
-        }
+        // Read secret from Render environment variables
+        String secret = System.getenv("SECRET_KEY");
 
         if (secret == null || secret.isBlank()) {
             throw new IllegalStateException(
-                    "SECRET_KEY was not found in backend/.env"
+                    "SECRET_KEY environment variable is missing."
             );
         }
 
@@ -52,14 +43,10 @@ public class JwtService {
         this.secretKey = Keys.hmacShaKeyFor(secretBytes);
     }
 
-    // GENERATE ACCESS TOKEN
-
     public String generateAccessToken(Integer userId) {
 
         if (userId == null || userId <= 0) {
-            throw new IllegalArgumentException(
-                    "Invalid user ID."
-            );
+            throw new IllegalArgumentException("Invalid user ID.");
         }
 
         Date now = new Date();
@@ -76,14 +63,10 @@ public class JwtService {
                 .compact();
     }
 
-    // EXTRACT AND VALIDATE TOKEN CLAIMS
-
     public Claims extractClaims(String token) {
 
         if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException(
-                    "JWT token is required."
-            );
+            throw new IllegalArgumentException("JWT token is required.");
         }
 
         Claims claims = Jwts.parser()
@@ -92,65 +75,44 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        // Validate user ID
         String subject = claims.getSubject();
 
         if (subject == null || subject.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Invalid token subject."
-            );
+            throw new IllegalArgumentException("Invalid token subject.");
         }
 
         try {
             int userId = Integer.parseInt(subject);
 
             if (userId <= 0) {
-                throw new IllegalArgumentException(
-                        "Invalid user ID in token."
-                );
+                throw new IllegalArgumentException("Invalid user ID.");
             }
 
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException(
-                    "Invalid user ID in token."
-            );
+            throw new IllegalArgumentException("Invalid user ID.");
         }
 
-        // Validate issued-at time
         Date issuedAt = claims.getIssuedAt();
 
-        if (issuedAt == null ||
-                issuedAt.after(new Date())) {
-            throw new IllegalArgumentException(
-                    "Invalid token issue time."
-            );
+        if (issuedAt == null || issuedAt.after(new Date())) {
+            throw new IllegalArgumentException("Invalid token issue time.");
         }
 
-        // Validate expiration
         Date expiration = claims.getExpiration();
 
-        if (expiration == null ||
-                !expiration.after(new Date())) {
-            throw new IllegalArgumentException(
-                    "Token has expired."
-            );
+        if (expiration == null || !expiration.after(new Date())) {
+            throw new IllegalArgumentException("Token has expired.");
         }
 
         return claims;
     }
 
-    // EXTRACT USER ID
-
     public Integer extractUserId(String token) {
 
         Claims claims = extractClaims(token);
 
-        return Integer.parseInt(
-                claims.getSubject()
-        );
+        return Integer.parseInt(claims.getSubject());
     }
-
-    // CHECK TOKEN VALIDITY
 
     public boolean isTokenValid(String token) {
 

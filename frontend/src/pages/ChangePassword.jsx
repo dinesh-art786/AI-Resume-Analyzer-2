@@ -3,6 +3,42 @@ import React, { useState } from "react";
 import "./ChangePassword.css";
 import { API_URL } from "../config";
 
+function PasswordField({
+  label,
+  value,
+  onChange,
+  visible,
+  setVisible,
+  placeholder,
+}) {
+  return (
+    <div className="cp-field">
+      <label>{label}</label>
+
+      <div className="cp-input-wrap">
+        <span className="cp-lock">◆</span>
+
+        <input
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required
+          maxLength={128}
+        />
+
+        <button
+          type="button"
+          className="cp-toggle"
+          onClick={() => setVisible(!visible)}
+        >
+          {visible ? "Hide" : "Show"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ChangePassword({ token, onBack, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -27,11 +63,17 @@ function ChangePassword({ token, onBack, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+
     setError("");
     setSuccess("");
 
-    if (newPassword.length < 8) {
-      setError("Password must contain at least 8 characters.");
+    if (currentPassword.length === 0) {
+      setError("Please enter your current password.");
+      return;
+    }
+
+    if (newPassword.length < 8 || newPassword.length > 128) {
+      setError("New password must contain 8 to 128 characters.");
       return;
     }
 
@@ -68,54 +110,32 @@ function ChangePassword({ token, onBack, onSuccess }) {
         }
       );
 
-      const data = await response.json().catch(() => null);
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data?.detail || "Unable to update password.");
+        throw new Error(
+          data.detail ||
+          data.message ||
+          data.title ||
+          "Unable to update password. Please check your current password."
+        );
       }
 
-      setSuccess("Your password has been updated successfully.");
+      setSuccess(
+        data.message || "Your password has been updated successfully."
+      );
+
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
 
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(
+        err.message || "Unable to connect to the server. Please try again."
+      );
     } finally {
       setLoading(false);
     }
-  }
-
-  function PasswordField({
-    label,
-    value,
-    onChange,
-    visible,
-    setVisible,
-    placeholder,
-  }) {
-    return (
-      <div className="cp-field">
-        <label>{label}</label>
-        <div className="cp-input-wrap">
-          <span className="cp-lock">◆</span>
-          <input
-            type={visible ? "text" : "password"}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            required
-          />
-          <button
-            type="button"
-            className="cp-toggle"
-            onClick={() => setVisible(!visible)}
-          >
-            {visible ? "Hide" : "Show"}
-          </button>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -124,6 +144,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
       <div className="cp-decoration cp-decoration-two"></div>
 
       <div className="cp-card">
+
         <div className="cp-left">
           <div className="cp-brand">
             <span className="cp-brand-icon">R</span>
@@ -132,11 +153,13 @@ function ChangePassword({ token, onBack, onSuccess }) {
 
           <div className="cp-left-content">
             <div className="cp-shield">✓</div>
+
             <h1>
               Your security.
               <br />
               <span>Your control.</span>
             </h1>
+
             <p>
               Protect your account with a strong password.
               A little security goes a long way.
@@ -155,9 +178,12 @@ function ChangePassword({ token, onBack, onSuccess }) {
         </div>
 
         <div className="cp-right">
+
           <div className="cp-form-header">
             <span className="cp-eyebrow">ACCOUNT SECURITY</span>
+
             <h2>Change password</h2>
+
             <p>
               Update your password to keep your account secure.
             </p>
@@ -166,8 +192,11 @@ function ChangePassword({ token, onBack, onSuccess }) {
           {success ? (
             <div className="cp-success-panel">
               <div className="cp-success-icon">✓</div>
+
               <h3>Password updated!</h3>
+
               <p>{success}</p>
+
               <button
                 type="button"
                 className="cp-submit"
@@ -178,6 +207,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
+
               <PasswordField
                 label="Current password"
                 value={currentPassword}
@@ -198,10 +228,12 @@ function ChangePassword({ token, onBack, onSuccess }) {
 
               {newPassword && (
                 <div className="cp-strength">
+
                   <div className="cp-strength-top">
                     <span>Password strength</span>
                     <strong>{strengthLabel}</strong>
                   </div>
+
                   <div className="cp-strength-bars">
                     {[1, 2, 3, 4].map((item) => (
                       <span
@@ -210,8 +242,10 @@ function ChangePassword({ token, onBack, onSuccess }) {
                       />
                     ))}
                   </div>
+
                   <small>
-                    Use uppercase letters, numbers and symbols for a stronger password.
+                    Use uppercase letters, numbers and symbols
+                    for a stronger password.
                   </small>
                 </div>
               )}
@@ -226,7 +260,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
               />
 
               {error && (
-                <div className="cp-error">
+                <div className="cp-error" role="alert">
                   <span>!</span> {error}
                 </div>
               )}
@@ -238,6 +272,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
               >
                 {loading ? "Updating password..." : "Update Password →"}
               </button>
+
             </form>
           )}
 
@@ -245,6 +280,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
             type="button"
             className="cp-back"
             onClick={onBack}
+            disabled={loading}
           >
             ← Back to Dashboard
           </button>
@@ -252,6 +288,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
           <div className="cp-privacy">
             <span>✓</span> Your account information stays protected
           </div>
+
         </div>
       </div>
     </div>

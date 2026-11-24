@@ -1,9 +1,9 @@
-import { API_URL, BACKEND_BASE_URL } from "../config";
+
 import React, { useEffect, useState, useCallback } from "react";
+import { PYTHON_API_URL, JAVA_BACKEND_URL } from "../config";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
-
 import { useAuth } from "../context/AuthContext";
 
 import {
@@ -25,7 +25,6 @@ function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-
   return `${year}-${month}-${day}`;
 }
 
@@ -34,9 +33,7 @@ function formatActivityDate(dateString) {
 
   const date = new Date(dateString);
 
-  if (Number.isNaN(date.getTime())) {
-    return dateString;
-  }
+  if (Number.isNaN(date.getTime())) return dateString;
 
   return date.toLocaleString("en-IN", {
     day: "numeric",
@@ -56,18 +53,11 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [selectedRange, setSelectedRange] = useState("all");
 
-  // ======================================
-  // AUTHENTICATION HEADERS
-  // ======================================
-
   const getAuthHeaders = () => ({
     Authorization: `Bearer ${token}`
   });
 
-  // ======================================
   // LOAD DASHBOARD DATA
-  // ======================================
-
   const loadDashboard = useCallback(async () => {
     if (!token) {
       setLoading(false);
@@ -85,9 +75,7 @@ function Dashboard() {
       if (selectedRange !== "all") {
         const start = new Date(today);
 
-        if (selectedRange === "today") {
-          // Today's date
-        } else if (selectedRange === "7") {
+        if (selectedRange === "7") {
           start.setDate(start.getDate() - 6);
         } else if (selectedRange === "30") {
           start.setDate(start.getDate() - 29);
@@ -99,13 +87,8 @@ function Dashboard() {
       const headers = getAuthHeaders();
 
       const [historyResponse, analyticsResponse] = await Promise.all([
-        fetch(`${API_URL}/history${query}`, {
-          headers
-        }),
-
-        fetch(`${API_URL}/analytics${query}`, {
-          headers
-        })
+        fetch(`${PYTHON_API_URL}/history${query}`, { headers }),
+        fetch(`${PYTHON_API_URL}/analytics${query}`, { headers })
       ]);
 
       if (
@@ -124,7 +107,6 @@ function Dashboard() {
 
       setHistory(Array.isArray(historyData) ? historyData : []);
       setAnalytics(analyticsData);
-
     } catch (err) {
       console.error("Dashboard Error:", err);
       setError(err.message || "Unable to load dashboard data.");
@@ -132,10 +114,6 @@ function Dashboard() {
       setLoading(false);
     }
   }, [selectedRange, token]);
-
-  // ======================================
-  // LOAD AND AUTO REFRESH DASHBOARD
-  // ======================================
 
   useEffect(() => {
     loadDashboard();
@@ -147,10 +125,7 @@ function Dashboard() {
     };
   }, [loadDashboard]);
 
-  // ======================================
   // EXPORT DATE FILTER
-  // ======================================
-
   function getExportQuery() {
     if (selectedRange === "all") return "";
 
@@ -166,20 +141,15 @@ function Dashboard() {
     return `?start_date=${formatDate(start)}&end_date=${formatDate(today)}`;
   }
 
-  // ======================================
   // GET EXPORT DATA
-  // ======================================
-
   async function getExportData() {
     if (!token) {
       throw new Error("Please log in first.");
     }
 
     const response = await fetch(
-      `${API_URL}/export${getExportQuery()}`,
-      {
-        headers: getAuthHeaders()
-      }
+      `${PYTHON_API_URL}/export${getExportQuery()}`,
+      { headers: getAuthHeaders() }
     );
 
     if (response.status === 401) {
@@ -193,10 +163,7 @@ function Dashboard() {
     return await response.json();
   }
 
-  // ======================================
   // PREPARE EXPORT DATA
-  // ======================================
-
   function prepareExportData(data) {
     return data.map((item) => ({
       ID: item.id,
@@ -209,10 +176,7 @@ function Dashboard() {
     }));
   }
 
-  // ======================================
   // CSV EXPORT
-  // ======================================
-
   async function exportCSV() {
     try {
       const data = await getExportData();
@@ -244,16 +208,12 @@ function Dashboard() {
       document.body.removeChild(link);
 
       URL.revokeObjectURL(url);
-
     } catch (err) {
       alert("CSV Export Failed: " + err.message);
     }
   }
 
-  // ======================================
   // EXCEL EXPORT
-  // ======================================
-
   async function exportExcel() {
     try {
       const data = await getExportData();
@@ -303,16 +263,12 @@ function Dashboard() {
       );
 
       XLSX.writeFile(workbook, "resume_analytics.xlsx");
-
     } catch (err) {
       alert("Excel Export Failed: " + err.message);
     }
   }
 
-  // ======================================
   // PDF EXPORT
-  // ======================================
-
   async function exportPDF() {
     try {
       const dashboard = document.getElementById("dashboard");
@@ -344,14 +300,7 @@ function Dashboard() {
       let heightLeft = imageHeight;
       let position = margin;
 
-      pdf.addImage(
-        image,
-        "PNG",
-        margin,
-        position,
-        imageWidth,
-        imageHeight
-      );
+      pdf.addImage(image, "PNG", margin, position, imageWidth, imageHeight);
 
       heightLeft -= availableHeight;
 
@@ -372,17 +321,13 @@ function Dashboard() {
       }
 
       pdf.save("resume_analytics_report.pdf");
-
     } catch (err) {
       console.error("PDF Export Error:", err);
       alert("PDF Export Failed: " + err.message);
     }
   }
 
-  // ======================================
   // LOADING STATE
-  // ======================================
-
   if (loading) {
     return (
       <section className="dashboard-section dashboard-status" id="dashboard">
@@ -392,19 +337,12 @@ function Dashboard() {
     );
   }
 
-  // ======================================
   // ERROR STATE
-  // ======================================
-
   if (error) {
     return (
       <section className="dashboard-section dashboard-status" id="dashboard">
         <p className="history-error">{error}</p>
-
-        <button
-          className="dashboard-retry"
-          onClick={loadDashboard}
-        >
+        <button className="dashboard-retry" onClick={loadDashboard}>
           Retry
         </button>
       </section>
@@ -419,10 +357,7 @@ function Dashboard() {
     );
   }
 
-  // ======================================
   // DASHBOARD CALCULATIONS
-  // ======================================
-
   const total = Number(analytics.total_analyses || 0);
   const averageScore = Number(analytics.average_score || 0);
 
@@ -450,32 +385,28 @@ function Dashboard() {
       value: total,
       icon: "▤",
       description: "Resumes analyzed",
-      color: "blue",
-      trend: "Your activity"
+      color: "blue"
     },
     {
       title: "Average ATS Score",
       value: `${averageScore}%`,
       icon: "◉",
       description: "Overall compatibility",
-      color: "cyan",
-      trend: "Average performance"
+      color: "cyan"
     },
     {
       title: "Highest ATS Score",
       value: `${highestScore}%`,
       icon: "♛",
       description: "In recent history",
-      color: "purple",
-      trend: "Best result"
+      color: "purple"
     },
     {
       title: "Average Skill Match",
       value: `${averageSkillCoverage}%`,
       icon: "◎",
       description: "Skill coverage",
-      color: "green",
-      trend: "Skill compatibility"
+      color: "green"
     }
   ];
 
@@ -503,10 +434,7 @@ function Dashboard() {
   const scoreDistribution = analytics.score_distribution || [];
   const missingSkills = analytics.top_missing_skills || [];
 
-  // ======================================
   // DASHBOARD INSIGHTS
-  // ======================================
-
   const performanceLevel =
     averageScore >= 70
       ? "Advanced"
@@ -548,17 +476,10 @@ function Dashboard() {
       ? "Good start! Continue analyzing resumes to track your improvement."
       : "Analyze more resumes to build your performance history.";
 
-  // ======================================
   // DASHBOARD UI
-  // ======================================
-
   return (
-    <section
-      className="dashboard-section premium-dashboard"
-      id="dashboard"
-    >
+    <section className="dashboard-section premium-dashboard" id="dashboard">
 
-      {/* DASHBOARD HEADER */}
       <div className="dashboard-header">
         <div>
           <div className="dashboard-eyebrow">
@@ -580,7 +501,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* USER PROFILE OVERVIEW */}
+      {/* USER PROFILE */}
       <div
         style={{
           display: "flex",
@@ -596,7 +517,11 @@ function Dashboard() {
       >
         {user?.profile_picture ? (
           <img
-            src={`${BACKEND_BASE_URL}${user.profile_picture}`}
+            src={
+              user.profile_picture.startsWith("http")
+                ? user.profile_picture
+                : `${JAVA_BACKEND_URL}${user.profile_picture}`
+            }
             alt="Profile"
             style={{
               width: "65px",
@@ -642,38 +567,24 @@ function Dashboard() {
 
       {/* FILTERS AND EXPORTS */}
       <div className="dashboard-toolbar" data-html2canvas-ignore="true">
-
         <div className="dashboard-filter-group">
           <span className="toolbar-label">TIME PERIOD</span>
 
           <div className="date-filter">
-            <button
-              className={selectedRange === "today" ? "active-filter" : ""}
-              onClick={() => setSelectedRange("today")}
-            >
-              Today
-            </button>
-
-            <button
-              className={selectedRange === "7" ? "active-filter" : ""}
-              onClick={() => setSelectedRange("7")}
-            >
-              7 Days
-            </button>
-
-            <button
-              className={selectedRange === "30" ? "active-filter" : ""}
-              onClick={() => setSelectedRange("30")}
-            >
-              30 Days
-            </button>
-
-            <button
-              className={selectedRange === "all" ? "active-filter" : ""}
-              onClick={() => setSelectedRange("all")}
-            >
-              All Time
-            </button>
+            {[
+              ["today", "Today"],
+              ["7", "7 Days"],
+              ["30", "30 Days"],
+              ["all", "All Time"]
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                className={selectedRange === value ? "active-filter" : ""}
+                onClick={() => setSelectedRange(value)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -740,10 +651,7 @@ function Dashboard() {
                 </div>
 
                 <h3>{stat.title}</h3>
-
-                <div className="dashboard-value">
-                  {stat.value}
-                </div>
+                <div className="dashboard-value">{stat.value}</div>
 
                 <div className="stat-bottom">
                   <span>{stat.description}</span>
@@ -753,7 +661,7 @@ function Dashboard() {
             ))}
           </div>
 
-          {/* CHARTS */}
+          {/* FOUR CHARTS */}
           <div className="dashboard-section-heading charts-heading">
             <div>
               <h3>Analytics & Insights</h3>
@@ -763,7 +671,7 @@ function Dashboard() {
 
           <div className="charts-grid premium-charts-grid">
 
-            {/* ATS SCORE DISTRIBUTION */}
+            {/* CHART 1: ATS SCORE DISTRIBUTION */}
             <div className="chart-card premium-chart-card">
               <div className="chart-title-row">
                 <div>
@@ -778,46 +686,16 @@ function Dashboard() {
                   data={scoreDistribution}
                   margin={{ top: 15, right: 10, left: -15, bottom: 5 }}
                 >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(148,177,211,0.12)"
-                  />
-
-                  <XAxis
-                    dataKey="range"
-                    tick={{ fill: "#9bb0ca", fontSize: 11 }}
-                    axisLine={{ stroke: "#29415e" }}
-                    tickLine={false}
-                  />
-
-                  <YAxis
-                    allowDecimals={false}
-                    tick={{ fill: "#9bb0ca", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-
-                  <Tooltip
-                    contentStyle={{
-                      background: "#10243b",
-                      border: "1px solid #29415e",
-                      borderRadius: "10px",
-                      color: "#ffffff"
-                    }}
-                  />
-
-                  <Bar
-                    dataKey="count"
-                    name="Resumes"
-                    fill="#168cff"
-                    radius={[6, 6, 0, 0]}
-                    maxBarSize={48}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,177,211,0.12)" />
+                  <XAxis dataKey="range" tick={{ fill: "#9bb0ca", fontSize: 11 }} axisLine={{ stroke: "#29415e" }} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: "#9bb0ca", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ background: "#10243b", border: "1px solid #29415e", borderRadius: "10px", color: "#ffffff" }} />
+                  <Bar dataKey="count" name="Resumes" fill="#168cff" radius={[6, 6, 0, 0]} maxBarSize={48} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
-            {/* SKILL MATCH OVERVIEW */}
+            {/* CHART 2: SKILL MATCH */}
             <div className="chart-card premium-chart-card">
               <div className="chart-title-row">
                 <div>
@@ -841,22 +719,11 @@ function Dashboard() {
                     label
                   >
                     {skillData.map((entry, index) => (
-                      <Cell
-                        key={entry.name}
-                        fill={skillColors[index]}
-                        stroke="none"
-                      />
+                      <Cell key={entry.name} fill={skillColors[index]} stroke="none" />
                     ))}
                   </Pie>
 
-                  <Tooltip
-                    contentStyle={{
-                      background: "#10243b",
-                      border: "1px solid #29415e",
-                      borderRadius: "10px",
-                      color: "#ffffff"
-                    }}
-                  />
+                  <Tooltip contentStyle={{ background: "#10243b", border: "1px solid #29415e", borderRadius: "10px", color: "#ffffff" }} />
                 </PieChart>
               </ResponsiveContainer>
 
@@ -865,7 +732,6 @@ function Dashboard() {
                   <i className="legend-dot matched-dot"></i>
                   Matched Skills
                 </span>
-
                 <span>
                   <i className="legend-dot missing-dot"></i>
                   Missing Skills
@@ -873,7 +739,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* PERFORMANCE TREND */}
+            {/* CHART 3: PERFORMANCE TREND */}
             <div className="chart-card premium-chart-card">
               <div className="chart-title-row">
                 <div>
@@ -884,60 +750,28 @@ function Dashboard() {
               </div>
 
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart
-                  data={trendData}
-                  margin={{ top: 15, right: 15, left: -15, bottom: 5 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(148,177,211,0.12)"
-                  />
-
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: "#9bb0ca", fontSize: 11 }}
-                    axisLine={{ stroke: "#29415e" }}
-                    tickLine={false}
-                  />
-
-                  <YAxis
-                    domain={[0, 100]}
-                    tick={{ fill: "#9bb0ca", fontSize: 11 }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-
+                <LineChart data={trendData} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,177,211,0.12)" />
+                  <XAxis dataKey="name" tick={{ fill: "#9bb0ca", fontSize: 11 }} axisLine={{ stroke: "#29415e" }} tickLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fill: "#9bb0ca", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip
-                    labelFormatter={(label, payload) =>
-                      payload?.[0]?.payload?.date || label
-                    }
-                    contentStyle={{
-                      background: "#10243b",
-                      border: "1px solid #29415e",
-                      borderRadius: "10px",
-                      color: "#ffffff"
-                    }}
+                    labelFormatter={(label, payload) => payload?.[0]?.payload?.date || label}
+                    contentStyle={{ background: "#10243b", border: "1px solid #29415e", borderRadius: "10px", color: "#ffffff" }}
                   />
-
                   <Line
                     type="monotone"
                     dataKey="score"
                     name="ATS Score"
                     stroke="#20baff"
                     strokeWidth={3}
-                    dot={{
-                      r: 4,
-                      fill: "#20baff",
-                      stroke: "#07111f",
-                      strokeWidth: 2
-                    }}
+                    dot={{ r: 4, fill: "#20baff", stroke: "#07111f", strokeWidth: 2 }}
                     activeDot={{ r: 7 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
 
-            {/* MISSING SKILLS */}
+            {/* CHART 4: MISSING SKILLS */}
             <div className="chart-card premium-chart-card">
               <div className="chart-title-row">
                 <div>
@@ -949,100 +783,29 @@ function Dashboard() {
 
               {missingSkills.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart
-                    data={missingSkills}
-                    layout="vertical"
-                    margin={{ top: 10, right: 15, left: 10, bottom: 5 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="rgba(148,177,211,0.12)"
-                    />
-
-                    <XAxis
-                      type="number"
-                      allowDecimals={false}
-                      tick={{ fill: "#9bb0ca", fontSize: 11 }}
-                      axisLine={{ stroke: "#29415e" }}
-                      tickLine={false}
-                    />
-
-                    <YAxis
-                      type="category"
-                      dataKey="skill"
-                      width={100}
-                      tick={{ fill: "#b5c8df", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-
-                    <Tooltip
-                      contentStyle={{
-                        background: "#10243b",
-                        border: "1px solid #29415e",
-                        borderRadius: "10px",
-                        color: "#ffffff"
-                      }}
-                    />
-
-                    <Bar
-                      dataKey="count"
-                      name="Missing count"
-                      fill="#ff9b55"
-                      radius={[0, 6, 6, 0]}
-                      maxBarSize={25}
-                    />
+                  <BarChart data={missingSkills} layout="vertical" margin={{ top: 10, right: 15, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,177,211,0.12)" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fill: "#9bb0ca", fontSize: 11 }} axisLine={{ stroke: "#29415e" }} tickLine={false} />
+                    <YAxis type="category" dataKey="skill" width={100} tick={{ fill: "#b5c8df", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ background: "#10243b", border: "1px solid #29415e", borderRadius: "10px", color: "#ffffff" }} />
+                    <Bar dataKey="count" name="Missing count" fill="#ff9b55" radius={[0, 6, 6, 0]} maxBarSize={25} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="chart-empty">
-                  No missing skills recorded.
-                </div>
+                <div className="chart-empty">No missing skills recorded.</div>
               )}
             </div>
           </div>
 
-          {/* RESUME ANALYSIS ACTIVITY TIMELINE */}
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px solid #dcebea",
-              borderRadius: "16px",
-              padding: "24px",
-              marginTop: "28px",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.04)"
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "10px",
-                marginBottom: "24px"
-              }}
-            >
+          {/* ACTIVITY TIMELINE */}
+          <div style={{ background: "#ffffff", border: "1px solid #dcebea", borderRadius: "16px", padding: "24px", marginTop: "28px", boxShadow: "0 4px 15px rgba(0,0,0,0.04)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "24px" }}>
               <div>
-                <h3 style={{ margin: "0 0 6px", color: "#263238" }}>
-                  Resume Analysis Activity Timeline
-                </h3>
-
-                <p style={{ margin: 0, color: "#718096", fontSize: "14px" }}>
-                  Follow your recent resume analysis journey
-                </p>
+                <h3 style={{ margin: "0 0 6px", color: "#263238" }}>Resume Analysis Activity Timeline</h3>
+                <p style={{ margin: 0, color: "#718096", fontSize: "14px" }}>Follow your recent resume analysis journey</p>
               </div>
 
-              <span
-                style={{
-                  background: "#EFF7F6",
-                  color: "#287d91",
-                  padding: "7px 12px",
-                  borderRadius: "20px",
-                  fontSize: "12px",
-                  fontWeight: "600"
-                }}
-              >
+              <span style={{ background: "#EFF7F6", color: "#287d91", padding: "7px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600" }}>
                 Latest {Math.min(history.length, 8)} activities
               </span>
             </div>
@@ -1051,131 +814,32 @@ function Dashboard() {
               <div style={{ position: "relative", paddingLeft: "12px" }}>
                 {history.slice(0, 8).map((item, index) => {
                   const score = Number(item.match_score || 0);
-
-                  const scoreColor =
-                    score >= 75
-                      ? "#16a36a"
-                      : score >= 50
-                      ? "#d18b20"
-                      : "#e05263";
+                  const scoreColor = score >= 75 ? "#16a36a" : score >= 50 ? "#d18b20" : "#e05263";
 
                   return (
-                    <div
-                      key={`timeline-${item.id}`}
-                      style={{
-                        display: "flex",
-                        gap: "16px",
-                        position: "relative",
-                        paddingBottom:
-                          index === Math.min(history.length, 8) - 1
-                            ? "0"
-                            : "24px"
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          minWidth: "16px",
-                          borderRadius: "50%",
-                          background: "#7BDFF2",
-                          border: "3px solid #dff8fa",
-                          marginTop: "4px",
-                          zIndex: 1
-                        }}
-                      />
+                    <div key={`timeline-${item.id}`} style={{ display: "flex", gap: "16px", position: "relative", paddingBottom: index === Math.min(history.length, 8) - 1 ? "0" : "24px" }}>
+                      <div style={{ width: "16px", height: "16px", minWidth: "16px", borderRadius: "50%", background: "#7BDFF2", border: "3px solid #dff8fa", marginTop: "4px", zIndex: 1 }} />
 
                       {index !== Math.min(history.length, 8) - 1 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            left: "7px",
-                            top: "20px",
-                            bottom: "0",
-                            width: "2px",
-                            background: "#dcebea"
-                          }}
-                        />
+                        <div style={{ position: "absolute", left: "7px", top: "20px", bottom: "0", width: "2px", background: "#dcebea" }} />
                       )}
 
-                      <div
-                        style={{
-                          flex: 1,
-                          background: "#f8fcfc",
-                          border: "1px solid #e5f0ef",
-                          borderRadius: "12px",
-                          padding: "14px 16px",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: "12px"
-                        }}
-                      >
+                      <div style={{ flex: 1, background: "#f8fcfc", border: "1px solid #e5f0ef", borderRadius: "12px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
                         <div style={{ minWidth: 0 }}>
-                          <strong
-                            style={{
-                              display: "block",
-                              color: "#263238",
-                              fontSize: "14px",
-                              overflowWrap: "anywhere"
-                            }}
-                          >
+                          <strong style={{ display: "block", color: "#263238", fontSize: "14px", overflowWrap: "anywhere" }}>
                             {item.filename || "Resume analysis"}
                           </strong>
-
-                          <span
-                            style={{
-                              display: "block",
-                              color: "#718096",
-                              fontSize: "12px",
-                              marginTop: "6px"
-                            }}
-                          >
+                          <span style={{ display: "block", color: "#718096", fontSize: "12px", marginTop: "6px" }}>
                             {formatActivityDate(item.created_at)}
                           </span>
-
-                          <span
-                            style={{
-                              display: "inline-block",
-                              marginTop: "8px",
-                              color: "#287d91",
-                              fontSize: "12px",
-                              fontWeight: "600"
-                            }}
-                          >
+                          <span style={{ display: "inline-block", marginTop: "8px", color: "#287d91", fontSize: "12px", fontWeight: "600" }}>
                             ✓ Resume analyzed
                           </span>
                         </div>
 
-                        <div
-                          style={{
-                            textAlign: "center",
-                            background: "#ffffff",
-                            border: "1px solid #e5f0ef",
-                            borderRadius: "10px",
-                            padding: "9px 14px",
-                            minWidth: "85px"
-                          }}
-                        >
-                          <strong
-                            style={{
-                              display: "block",
-                              color: scoreColor,
-                              fontSize: "20px"
-                            }}
-                          >
-                            {score}%
-                          </strong>
-
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              color: "#718096"
-                            }}
-                          >
-                            ATS Score
-                          </span>
+                        <div style={{ textAlign: "center", background: "#ffffff", border: "1px solid #e5f0ef", borderRadius: "10px", padding: "9px 14px", minWidth: "85px" }}>
+                          <strong style={{ display: "block", color: scoreColor, fontSize: "20px" }}>{score}%</strong>
+                          <span style={{ fontSize: "11px", color: "#718096" }}>ATS Score</span>
                         </div>
                       </div>
                     </div>
@@ -1183,116 +847,32 @@ function Dashboard() {
                 })}
               </div>
             ) : (
-              <p style={{ color: "#718096", textAlign: "center" }}>
-                No activity available yet.
-              </p>
+              <p style={{ color: "#718096", textAlign: "center" }}>No activity available yet.</p>
             )}
           </div>
 
           {/* AI PERFORMANCE INSIGHTS */}
-          <div
-            style={{
-              marginTop: "28px",
-              padding: "24px",
-              background: "#ffffff",
-              border: "1px solid #dcebea",
-              borderRadius: "16px",
-              boxShadow: "0 4px 15px rgba(0,0,0,0.04)"
-            }}
-          >
+          <div style={{ marginTop: "28px", padding: "24px", background: "#ffffff", border: "1px solid #dcebea", borderRadius: "16px", boxShadow: "0 4px 15px rgba(0,0,0,0.04)" }}>
             <div style={{ marginBottom: "22px" }}>
-              <h3 style={{ margin: "0 0 6px", color: "#263238" }}>
-                AI Performance Insights
-              </h3>
-
-              <p style={{ margin: 0, color: "#718096", fontSize: "14px" }}>
-                Personalized insights based on your resume analysis results
-              </p>
+              <h3 style={{ margin: "0 0 6px", color: "#263238" }}>AI Performance Insights</h3>
+              <p style={{ margin: 0, color: "#718096", fontSize: "14px" }}>Personalized insights based on your resume analysis results</p>
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "16px"
-              }}
-            >
-              {/* PERFORMANCE LEVEL */}
-              <div
-                style={{
-                  padding: "18px",
-                  background: "#f8fcfc",
-                  borderRadius: "12px",
-                  border: "1px solid #e5f0ef"
-                }}
-              >
-                <span style={{ fontSize: "13px", color: "#718096" }}>
-                  Performance Level
-                </span>
-
-                <h2
-                  style={{
-                    color: performanceColor,
-                    margin: "10px 0",
-                    fontSize: "25px"
-                  }}
-                >
-                  {performanceLevel}
-                </h2>
-
-                <p style={{ color: "#718096", fontSize: "13px", margin: 0 }}>
-                  Based on your average ATS score of {averageScore}%
-                </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+              <div style={{ padding: "18px", background: "#f8fcfc", borderRadius: "12px", border: "1px solid #e5f0ef" }}>
+                <span style={{ fontSize: "13px", color: "#718096" }}>Performance Level</span>
+                <h2 style={{ color: performanceColor, margin: "10px 0", fontSize: "25px" }}>{performanceLevel}</h2>
+                <p style={{ color: "#718096", fontSize: "13px", margin: 0 }}>Based on your average ATS score of {averageScore}%</p>
               </div>
 
-              {/* IMPROVEMENT TIP */}
-              <div
-                style={{
-                  padding: "18px",
-                  background: "#f8fcfc",
-                  borderRadius: "12px",
-                  border: "1px solid #e5f0ef"
-                }}
-              >
-                <span style={{ fontSize: "13px", color: "#718096" }}>
-                  ATS Improvement Tip
-                </span>
-
-                <p
-                  style={{
-                    color: "#263238",
-                    margin: "12px 0 0",
-                    fontSize: "14px",
-                    lineHeight: "1.6"
-                  }}
-                >
-                  {improvementTip}
-                </p>
+              <div style={{ padding: "18px", background: "#f8fcfc", borderRadius: "12px", border: "1px solid #e5f0ef" }}>
+                <span style={{ fontSize: "13px", color: "#718096" }}>ATS Improvement Tip</span>
+                <p style={{ color: "#263238", margin: "12px 0 0", fontSize: "14px", lineHeight: "1.6" }}>{improvementTip}</p>
               </div>
 
-              {/* SKILL GAP ALERT */}
-              <div
-                style={{
-                  padding: "18px",
-                  background: "#f8fcfc",
-                  borderRadius: "12px",
-                  border: "1px solid #e5f0ef"
-                }}
-              >
-                <span style={{ fontSize: "13px", color: "#718096" }}>
-                  Skill Gap Alert
-                </span>
-
-                <h3
-                  style={{
-                    color: "#d18b20",
-                    margin: "10px 0",
-                    fontSize: "20px"
-                  }}
-                >
-                  {topMissingSkill || "No major gaps"}
-                </h3>
-
+              <div style={{ padding: "18px", background: "#f8fcfc", borderRadius: "12px", border: "1px solid #e5f0ef" }}>
+                <span style={{ fontSize: "13px", color: "#718096" }}>Skill Gap Alert</span>
+                <h3 style={{ color: "#d18b20", margin: "10px 0", fontSize: "20px" }}>{topMissingSkill || "No major gaps"}</h3>
                 <p style={{ color: "#718096", fontSize: "13px", margin: 0 }}>
                   {topMissingSkill
                     ? "Frequently missing skill. Consider adding relevant experience with this skill if you have it."
@@ -1300,32 +880,10 @@ function Dashboard() {
                 </p>
               </div>
 
-              {/* PROGRESS MESSAGE */}
-              <div
-                style={{
-                  padding: "18px",
-                  background: "#f8fcfc",
-                  borderRadius: "12px",
-                  border: "1px solid #e5f0ef"
-                }}
-              >
-                <span style={{ fontSize: "13px", color: "#718096" }}>
-                  Your Progress
-                </span>
-
-                <h3
-                  style={{
-                    color: "#287d91",
-                    margin: "10px 0",
-                    fontSize: "20px"
-                  }}
-                >
-                  {total} Analyses
-                </h3>
-
-                <p style={{ color: "#718096", fontSize: "13px", margin: 0 }}>
-                  {progressMessage}
-                </p>
+              <div style={{ padding: "18px", background: "#f8fcfc", borderRadius: "12px", border: "1px solid #e5f0ef" }}>
+                <span style={{ fontSize: "13px", color: "#718096" }}>Your Progress</span>
+                <h3 style={{ color: "#287d91", margin: "10px 0", fontSize: "20px" }}>{total} Analyses</h3>
+                <p style={{ color: "#718096", fontSize: "13px", margin: 0 }}>{progressMessage}</p>
               </div>
             </div>
           </div>
@@ -1337,24 +895,16 @@ function Dashboard() {
                 <h3>Recent Resume Analyses</h3>
                 <p>Your latest resume activity</p>
               </div>
-
-              <span className="recent-count">
-                {history.length} records
-              </span>
+              <span className="recent-count">{history.length} records</span>
             </div>
 
             {history.slice(0, 5).map((item) => (
-              <div
-                className="recent-item premium-recent-item"
-                key={item.id}
-              >
+              <div className="recent-item premium-recent-item" key={item.id}>
                 <div className="recent-file-icon">PDF</div>
-
                 <div className="recent-file-info">
                   <strong>{item.filename}</strong>
                   <span>{item.created_at}</span>
                 </div>
-
                 <div className="recent-score">
                   <strong>{item.match_score}%</strong>
                   <span>ATS Score</span>

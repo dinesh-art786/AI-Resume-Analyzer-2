@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
-import { API_URL } from "../config";
+import { PYTHON_API_URL } from "../config";
 
 function History() {
   const { token } = useAuth();
@@ -30,7 +30,7 @@ function History() {
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/history`, {
+      const response = await fetch(`${PYTHON_API_URL}/history`, {
         headers: getAuthHeaders()
       });
 

@@ -1,12 +1,20 @@
+<<<<<<< HEAD
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
+=======
+
+import React, { useState, useEffect } from "react";
+
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
+>>>>>>> e335e05750fe9d5281ca3e0e147b1901b1d0657e
 import ChangePassword from "./pages/ChangePassword.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+
 import { useAuth } from "./context/AuthContext.jsx";
-import { API_URL } from "./config";
-import React, { useState, useEffect } from "react";
+import { PYTHON_API_URL } from "./config";
 
 import Navbar from "./components/Navbar";
 import ResumeUpload from "./components/ResumeUpload";
@@ -14,7 +22,6 @@ import AnalysisResult from "./components/AnalysisResult";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 import CinematicExperience from "./components/CinematicExperience";
-
 
 import "./App.css";
 
@@ -37,9 +44,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    // =====================================
-    // WHOLE WEBSITE SCROLL ANIMATIONS
-    // =====================================
+    // SCROLL ANIMATIONS
 
     useEffect(() => {
         const elements = document.querySelectorAll(`
@@ -85,9 +90,7 @@ function App() {
         return () => observer.disconnect();
     }, [activePage, result]);
 
-    // =====================================
     // AUTHENTICATION LOADING
-    // =====================================
 
     if (authLoading) {
         return (
@@ -97,9 +100,7 @@ function App() {
         );
     }
 
-    // =====================================
     // PASSWORD RESET PAGE
-    // =====================================
 
     if (window.location.pathname === "/reset-password") {
         return (
@@ -113,9 +114,7 @@ function App() {
         );
     }
 
-    // =====================================
     // AUTHENTICATION
-    // =====================================
 
     if (!isAuthenticated) {
         if (authMode === "register") {
@@ -142,9 +141,7 @@ function App() {
         );
     }
 
-    // =====================================
     // ACCOUNT SETTINGS
-    // =====================================
 
     if (showAccountSettings) {
         return (
@@ -157,9 +154,7 @@ function App() {
         );
     }
 
-    // =====================================
     // CHANGE PASSWORD
-    // =====================================
 
     if (showChangePassword) {
         return (
@@ -171,9 +166,7 @@ function App() {
         );
     }
 
-    // =====================================
-    // ANALYZE RESUME
-    // =====================================
+    // ANALYZE RESUME - PYTHON BACKEND
 
     async function analyzeResume(file, jobDescription) {
         if (!file || !jobDescription.trim()) {
@@ -204,7 +197,7 @@ function App() {
 
         try {
             const response = await fetch(
-    `${API_URL}/analyze`,
+                `${PYTHON_API_URL}/analyze`,
                 {
                     method: "POST",
                     headers: {
@@ -261,9 +254,7 @@ function App() {
         }
     }
 
-    // =====================================
     // ANALYZE ANOTHER RESUME
-    // =====================================
 
     function analyzeAnotherResume() {
         setResult(null);
@@ -271,9 +262,7 @@ function App() {
         changePage("analyzer");
     }
 
-    // =====================================
     // NAVIGATION
-    // =====================================
 
     function changePage(page) {
         setActivePage(page);
@@ -298,9 +287,7 @@ function App() {
         }, 150);
     }
 
-    // =====================================
     // MAIN WEBSITE
-    // =====================================
 
     return (
         <div className="app">
@@ -343,7 +330,6 @@ function App() {
                 {/* WELCOME HEADER */}
 
                 <div className="welcome-header">
-
                     <div>
                         <span className="welcome-label">
                             YOUR WORKSPACE
@@ -357,7 +343,6 @@ function App() {
                             Your career journey starts here.
                         </p>
                     </div>
-
                 </div>
 
                 {/* WORKSPACE NAVIGATION */}
@@ -399,14 +384,12 @@ function App() {
                 {/* ANALYZER */}
 
                 {activePage === "analyzer" && (
-
                     <section
                         className="workspace-section analyzer-area"
                         id="analyzer"
                     >
 
                         <div className="workspace-heading">
-
                             <div>
                                 <h2>Resume Analyzer</h2>
 
@@ -414,16 +397,13 @@ function App() {
                                     Upload your resume and job description.
                                 </p>
                             </div>
-
                         </div>
 
                         <div className="analyzer-panel">
-
                             <ResumeUpload
                                 onAnalyze={analyzeResume}
                                 loading={loading}
                             />
-
                         </div>
 
                         {loading && (
@@ -453,14 +433,12 @@ function App() {
                         )}
 
                         {result && (
-
                             <div
                                 className="analysis-output"
                                 id="analysis-output"
                             >
 
                                 <div className="result-top-actions">
-
                                     <button
                                         type="button"
                                         className="analyze-another-button"
@@ -468,30 +446,25 @@ function App() {
                                     >
                                         + New Analysis
                                     </button>
-
                                 </div>
 
                                 <AnalysisResult result={result} />
 
                             </div>
-
                         )}
 
                     </section>
-
                 )}
 
                 {/* DASHBOARD */}
 
                 {activePage === "dashboard" && (
-
                     <section
                         className="workspace-section data-area"
                         id="dashboard"
                     >
 
                         <div className="workspace-heading">
-
                             <div>
                                 <h2>Your Dashboard</h2>
 
@@ -499,26 +472,22 @@ function App() {
                                     Your resume performance at a glance.
                                 </p>
                             </div>
-
                         </div>
 
                         <Dashboard />
 
                     </section>
-
                 )}
 
                 {/* HISTORY */}
 
                 {activePage === "history" && (
-
                     <section
                         className="workspace-section data-area"
                         id="history"
                     >
 
                         <div className="workspace-heading">
-
                             <div>
                                 <h2>Analysis History</h2>
 
@@ -526,13 +495,11 @@ function App() {
                                     Your previous resume analyses.
                                 </p>
                             </div>
-
                         </div>
 
                         <History />
 
                     </section>
-
                 )}
 
             </main>
@@ -544,13 +511,11 @@ function App() {
                 <div className="footer-main">
 
                     <div className="footer-brand">
-
                         <h2>✦ ResumeAI</h2>
 
                         <p>
                             Smarter resumes. Better opportunities.
                         </p>
-
                     </div>
 
                     <div className="footer-links">

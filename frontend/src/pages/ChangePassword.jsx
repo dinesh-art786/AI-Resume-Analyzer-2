@@ -1,7 +1,43 @@
 
 import React, { useState } from "react";
 import "./ChangePassword.css";
-import { API_URL } from "../config";
+import { JAVA_API_URL } from "../config";
+
+function PasswordField({
+  label,
+  value,
+  onChange,
+  visible,
+  setVisible,
+  placeholder,
+}) {
+  return (
+    <div className="cp-field">
+      <label>{label}</label>
+
+      <div className="cp-input-wrap">
+        <span className="cp-lock">◆</span>
+
+        <input
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required
+          maxLength={128}
+        />
+
+        <button
+          type="button"
+          className="cp-toggle"
+          onClick={() => setVisible(!visible)}
+        >
+          {visible ? "Hide" : "Show"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function PasswordField({
   label,
@@ -96,7 +132,7 @@ function ChangePassword({ token, onBack, onSuccess }) {
 
     try {
       const response = await fetch(
-        `${API_URL}/auth/change-password`,
+        `${JAVA_API_URL}/auth/change-password`,
         {
           method: "POST",
           headers: {

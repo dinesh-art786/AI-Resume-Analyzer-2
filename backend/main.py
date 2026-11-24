@@ -49,6 +49,7 @@ frontend_origins = [
     "http://127.0.0.1:5173",
     "http://localhost:5177",
     "http://127.0.0.1:5177",
+    "https://ai-resume-analyzer-2-eight.vercel.app",
 ]
 
 # Add deployed frontend URL from environment

@@ -1,7 +1,7 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./AccountSettings.css";
-import { API_URL, BACKEND_BASE_URL } from "../config";
+import { JAVA_API_URL, JAVA_BACKEND_URL } from "../config";
 
 function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
@@ -10,7 +10,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
     const [profilePicture, setProfilePicture] = useState(
         user?.profile_picture
-            ? `${BACKEND_BASE_URL}${user.profile_picture}`
+            ? `${JAVA_BACKEND_URL}${user.profile_picture}`
             : ""
     );
 
@@ -25,9 +25,18 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
     const fileInputRef = useRef(null);
 
+    useEffect(() => {
+        setName(user?.name || "");
+        setEmail(user?.email || "");
+        setProfilePicture(
+            user?.profile_picture
+                ? `${JAVA_BACKEND_URL}${user.profile_picture}`
+                : ""
+        );
+    }, [user]);
+
     // UPDATE PROFILE DETAILS
     const handleSubmit = async (e) => {
-
         e.preventDefault();
 
         setError("");
@@ -44,26 +53,30 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
         }
 
         try {
-
             setLoading(true);
 
-            const response = await fetch(`${API_URL}/auth/profile`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    email: email.trim(),
-                }),
-            });
+            const response = await fetch(
+                `${JAVA_API_URL}/auth/profile`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        name: name.trim(),
+                        email: email.trim(),
+                    }),
+                }
+            );
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
                 throw new Error(
-                    data.detail || "Unable to update profile."
+                    data.message ||
+                    data.detail ||
+                    "Unable to update profile."
                 );
             }
 
@@ -74,18 +87,14 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
             );
 
         } catch (err) {
-
             setError(err.message);
-
         } finally {
-
             setLoading(false);
         }
     };
 
     // SELECT PROFILE PICTURE
     const handleFileChange = (e) => {
-
         setError("");
         setSuccess("");
 
@@ -93,10 +102,7 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
 
         if (!file) return;
 
-        const allowedTypes = [
-            "image/jpeg",
-            "image/png"
-        ];
+        const allowedTypes = ["image/jpeg", "image/png"];
 
         if (!allowedTypes.includes(file.type)) {
             setError("Only JPG, JPEG and PNG images are allowed.");
@@ -110,16 +116,16 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
             return;
         }
 
-        setSelectedFile(file);
+        if (selectedFile && profilePicture.startsWith("blob:")) {
+            URL.revokeObjectURL(profilePicture);
+        }
 
-        setProfilePicture(
-            URL.createObjectURL(file)
-        );
+        setSelectedFile(file);
+        setProfilePicture(URL.createObjectURL(file));
     };
 
     // UPLOAD PROFILE PICTURE
     const handlePictureUpload = async () => {
-
         if (!selectedFile) {
             setError("Please select an image first.");
             return;
@@ -129,15 +135,13 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
         setSuccess("");
 
         try {
-
             setPictureLoading(true);
 
             const formData = new FormData();
-
             formData.append("file", selectedFile);
 
             const response = await fetch(
-                `${API_URL}/auth/upload-profile-picture`,
+                `${JAVA_API_URL}/auth/profile-picture`,
                 {
                     method: "POST",
                     headers: {
@@ -147,21 +151,25 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                 }
             );
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
                 throw new Error(
-                    data.detail || "Unable to upload profile picture."
+                    data.message ||
+                    data.detail ||
+                    "Unable to upload profile picture."
                 );
             }
 
-            const updatedPicture =
-                `${BACKEND_BASE_URL}${data.profile_picture}`;
+            const updatedPicture = data.profile_picture
+                ? `${JAVA_BACKEND_URL}${data.profile_picture}`
+                : "";
 
             setProfilePicture(updatedPicture);
             setSelectedFile(null);
 
             onProfileUpdated?.({
+                ...user,
                 profile_picture: data.profile_picture
             });
 
@@ -172,27 +180,22 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
             setSuccess("Profile picture uploaded successfully.");
 
         } catch (err) {
-
             setError(err.message);
-
         } finally {
-
             setPictureLoading(false);
         }
     };
 
     // DELETE PROFILE PICTURE
     const handlePictureDelete = async () => {
-
         setError("");
         setSuccess("");
 
         try {
-
             setDeleteLoading(true);
 
             const response = await fetch(
-                `${API_URL}/auth/profile-picture`,
+                `${JAVA_API_URL}/auth/profile-picture`,
                 {
                     method: "DELETE",
                     headers: {
@@ -201,12 +204,18 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                 }
             );
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
                 throw new Error(
-                    data.detail || "Unable to remove profile picture."
+                    data.message ||
+                    data.detail ||
+                    "Unable to remove profile picture."
                 );
+            }
+
+            if (selectedFile && profilePicture.startsWith("blob:")) {
+                URL.revokeObjectURL(profilePicture);
             }
 
             setProfilePicture("");
@@ -217,29 +226,24 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
             }
 
             onProfileUpdated?.({
+                ...user,
                 profile_picture: null
             });
 
             setSuccess("Profile picture removed successfully.");
 
         } catch (err) {
-
             setError(err.message);
-
         } finally {
-
             setDeleteLoading(false);
         }
     };
 
     return (
-
         <div className="account-page">
-
             <div className="account-card">
 
                 {/* LEFT PANEL */}
-
                 <div className="account-left">
 
                     <div className="account-brand">
@@ -281,7 +285,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                 </div>
 
                 {/* RIGHT PANEL */}
-
                 <div className="account-right">
 
                     <button
@@ -307,27 +310,22 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                     </div>
 
                     {/* PROFILE PICTURE */}
-
                     <div className="profile-picture-section">
 
                         <div className="profile-picture-preview">
 
                             {profilePicture ? (
-
                                 <img
                                     src={profilePicture}
                                     alt="Profile"
                                     className="profile-picture-image"
                                 />
-
                             ) : (
-
                                 <div className="profile-picture-placeholder">
                                     {name
                                         ? name.trim().charAt(0).toUpperCase()
                                         : "U"}
                                 </div>
-
                             )}
 
                         </div>
@@ -355,7 +353,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                             </button>
 
                             {selectedFile && (
-
                                 <button
                                     type="button"
                                     className="upload-picture-button"
@@ -366,11 +363,9 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                                         ? "Uploading..."
                                         : "Upload Picture"}
                                 </button>
-
                             )}
 
                             {(user?.profile_picture || selectedFile) && (
-
                                 <button
                                     type="button"
                                     className="remove-picture-button"
@@ -381,7 +376,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                                         ? "Removing..."
                                         : "Remove Picture"}
                                 </button>
-
                             )}
 
                         </div>
@@ -393,7 +387,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                     </div>
 
                     {/* PROFILE FORM */}
-
                     <form onSubmit={handleSubmit}>
 
                         <div className="account-field">
@@ -464,7 +457,6 @@ function AccountSettings({ user, token, onBack, onProfileUpdated }) {
                 </div>
 
             </div>
-
         </div>
     );
 }

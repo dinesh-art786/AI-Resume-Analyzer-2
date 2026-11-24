@@ -6,7 +6,7 @@ import React, {
     useState
 } from "react";
 
-import { API_URL } from "../config";
+import { JAVA_API_URL } from "../config";
 
 const AuthContext = createContext(null);
 
@@ -18,6 +18,8 @@ export function AuthProvider({ children }) {
     );
 
     const [loading, setLoading] = useState(true);
+
+    // VERIFY LOGIN SESSION
 
     useEffect(() => {
         let active = true;
@@ -31,21 +33,29 @@ export function AuthProvider({ children }) {
             }
 
             try {
-                const response = await fetch(`${API_URL}/auth/me`, {
-                    headers: {
-                        Authorization: `Bearer ${savedToken}`,
-                    },
-                });
+                const response = await fetch(
+                    `${JAVA_API_URL}/auth/me`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${savedToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json().catch(() => null);
 
                 if (!response.ok) {
-                    throw new Error("Session expired");
+                    throw new Error(
+                        data?.message ||
+                        data?.detail ||
+                        "Session expired"
+                    );
                 }
-
-                const data = await response.json();
 
                 if (active) {
                     setUser(data.user);
                 }
+
             } catch (error) {
                 console.error("Session verification error:", error);
 
@@ -54,6 +64,7 @@ export function AuthProvider({ children }) {
                     setToken(null);
                     setUser(null);
                 }
+
             } finally {
                 if (active) {
                     setLoading(false);
@@ -68,28 +79,41 @@ export function AuthProvider({ children }) {
         };
     }, []);
 
+    // LOGIN AND REGISTRATION
+
     const authenticate = async (endpoint, formData) => {
         try {
             const response = await fetch(
-                `${API_URL}/auth/${endpoint}`,
+                `${JAVA_API_URL}/auth/${endpoint}`,
                 {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
+                        "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify(formData)
                 }
             );
 
-            const data = await response.json();
+            const data = await response.json().catch(() => null);
 
             if (!response.ok) {
                 throw new Error(
-                    data.detail || "Authentication failed"
+                    data?.message ||
+                    data?.detail ||
+                    "Authentication failed"
                 );
             }
 
-            localStorage.setItem("access_token", data.access_token);
+            if (!data?.access_token || !data?.user) {
+                throw new Error(
+                    "Invalid authentication response from Java server."
+                );
+            }
+
+            localStorage.setItem(
+                "access_token",
+                data.access_token
+            );
 
             setToken(data.access_token);
             setUser(data.user);
@@ -101,7 +125,7 @@ export function AuthProvider({ children }) {
 
             if (error instanceof TypeError) {
                 throw new Error(
-                    "Cannot connect to the backend. Please check your API URL."
+                    "Cannot connect to the Java backend. Please try again."
                 );
             }
 
@@ -115,12 +139,16 @@ export function AuthProvider({ children }) {
     const login = (formData) =>
         authenticate("login", formData);
 
+    // UPDATE USER
+
     const updateUser = (updatedUser) => {
         setUser((previousUser) => ({
             ...previousUser,
-            ...updatedUser,
+            ...updatedUser
         }));
     };
+
+    // LOGOUT
 
     const logout = () => {
         localStorage.removeItem("access_token");
@@ -138,7 +166,7 @@ export function AuthProvider({ children }) {
                 login,
                 logout,
                 updateUser,
-                isAuthenticated: !!token && !!user,
+                isAuthenticated: !!token && !!user
             }}
         >
             {children}
